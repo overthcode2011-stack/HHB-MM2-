@@ -187,7 +187,6 @@ local DEL_ICON           = "rbxassetid://120824454689592"
 local CLEAR_ICON_ID      = "rbxassetid://80646119892661"
 local EXEC_ICON_ID       = "rbxassetid://116651535114885"
 local VERIFIED_ICON_ID   = "rbxassetid://13737813988"
-local FLING_ICON = "rbxassetid://108692862281038" 
 
 local DEFAULT_WALKSPEED  = 16
 local DEFAULT_JUMPPOWER  = 50
@@ -629,7 +628,7 @@ end)
 -- SIDEBAR Y PAGINAS
 --============================================================
 local sidebar = Instance.new("ScrollingFrame")
-sidebar.Size = UDim2.new(0, 138, 1, -68)
+sidebar.Size = UDim2.new(0, 138, 1, -130)
 sidebar.Position = UDim2.new(0, 8, 0, 62)
 sidebar.BackgroundColor3 = T().bg
 sidebar.BackgroundTransparency = 0.45
@@ -651,7 +650,7 @@ sidebarLayout.Padding = UDim.new(0,6)
 sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
 sidebarLayout.Parent = sidebar
 
-local tabDefs = {"Home","Waypoints","Jugadores","ESP","Movimiento","Aimbot","Avatar","Executor","Scripts","Settings",}
+local tabDefs = {"Home","Waypoints","Jugadores","ESP","Movimiento","Aimbot","Avatar","Executor","Scripts","Misc","Settings",}
 local tabBtns = {}
 for i, name in ipairs(tabDefs) do
 	local btn = Instance.new("TextButton")
@@ -668,8 +667,9 @@ for i, name in ipairs(tabDefs) do
 	btn.LayoutOrder = i
 	btn.Parent = sidebar
 	styleCorner(btn, UDim.new(0,10))
-	styleStroke(btn, 0.88)
+	local btnStroke = styleStroke(btn, 0.88)
 	tabBtns[name] = btn
+	table.insert(reg.accentStrokes, btnStroke)
 	table.insert(reg.sidebarBtns, {btn, name})
 
 	btn.MouseEnter:Connect(function()
@@ -690,6 +690,63 @@ contentArea.Position = UDim2.new(0, 154, 0, 62)
 contentArea.BackgroundTransparency = 1
 contentArea.BorderSizePixel = 0
 contentArea.Parent = panel
+
+-- PLAYER INFO PANEL (bottom-left)
+local playerInfoPanel = Instance.new("Frame")
+playerInfoPanel.Size = UDim2.new(0, 138, 0, 58)
+playerInfoPanel.Position = UDim2.new(0, 8, 1, -68)
+playerInfoPanel.BackgroundColor3 = T().bg
+playerInfoPanel.BackgroundTransparency = 0.35
+playerInfoPanel.BorderSizePixel = 0
+playerInfoPanel.ClipsDescendants = true
+playerInfoPanel.Parent = panel
+styleCorner(playerInfoPanel, UDim.new(0, 10))
+styleStroke(playerInfoPanel, 0.80)
+table.insert(reg.panels, playerInfoPanel)
+
+local pfpFrame = Instance.new("Frame")
+pfpFrame.Size = UDim2.new(0, 36, 0, 36)
+pfpFrame.Position = UDim2.new(0, 8, 0.5, -18)
+pfpFrame.BackgroundColor3 = T().accent
+pfpFrame.BackgroundTransparency = 0.6
+pfpFrame.BorderSizePixel = 0
+pfpFrame.Parent = playerInfoPanel
+styleCorner(pfpFrame, UDim.new(1, 0))
+
+local pfpImage = Instance.new("ImageLabel")
+pfpImage.Size = UDim2.new(1, -4, 1, -4)
+pfpImage.Position = UDim2.new(0, 2, 0, 2)
+pfpImage.BackgroundTransparency = 1
+pfpImage.Image = "rbxthumb://type=AvatarHeadShot&id="..player.UserId.."&w=150&h=150"
+pfpImage.ScaleType = Enum.ScaleType.Fit
+pfpImage.Parent = pfpFrame
+styleCorner(pfpImage, UDim.new(1, 0))
+
+local displayNameLbl = Instance.new("TextLabel")
+displayNameLbl.Size = UDim2.new(1, -54, 0, 18)
+displayNameLbl.Position = UDim2.new(0, 50, 0, 8)
+displayNameLbl.BackgroundTransparency = 1
+displayNameLbl.Text = player.DisplayName
+displayNameLbl.TextColor3 = T().text
+displayNameLbl.Font = Enum.Font.GothamBold
+displayNameLbl.TextSize = 13
+displayNameLbl.TextXAlignment = Enum.TextXAlignment.Left
+displayNameLbl.TextTruncate = Enum.TextTruncate.AtEnd
+displayNameLbl.Parent = playerInfoPanel
+table.insert(reg.texts, displayNameLbl)
+
+local usernameLbl = Instance.new("TextLabel")
+usernameLbl.Size = UDim2.new(1, -54, 0, 14)
+usernameLbl.Position = UDim2.new(0, 50, 0, 28)
+usernameLbl.BackgroundTransparency = 1
+usernameLbl.Text = "@"..player.Name
+usernameLbl.TextColor3 = T().subtext
+usernameLbl.Font = Enum.Font.Gotham
+usernameLbl.TextSize = 10
+usernameLbl.TextXAlignment = Enum.TextXAlignment.Left
+usernameLbl.TextTruncate = Enum.TextTruncate.AtEnd
+usernameLbl.Parent = playerInfoPanel
+table.insert(reg.subtexts, usernameLbl)
 
 local pages = {}
 local function newPage(name)
@@ -925,10 +982,10 @@ do
 		setMusic(v)
 		if v then
 			playMusic()
-			showToast("Playing: EYUHH! - HR")
+			showNotification("Playing: EYUHH! - HR")
 		else
 			stopMusic()
-			showToast("Music stopped")
+			showNotification("Music stopped")
 		end
 	end)
 
@@ -1097,35 +1154,69 @@ do
 	makeFeatureRow(homePage, "Settings", "7 themes (2 exclusive) · Fullbright · Hide GUI", 17)
 end
 
---============================================================
--- ALMACENES DE ESTADOS
---============================================================
-espStates = {
-	getPL = nil, setPL = nil,
-	getMM2 = nil, setMM2 = nil,
-	getOG = nil, setOG = nil,
-	getNameTag = nil, setNameTag = nil,
-	getTeamOnly = nil, setTeamOnly = nil,
-}
-movementStates = {
-	getNoclip = nil, setNoclip = nil,
-	getGod = nil, setGod = nil,
-	getInfiniteJump = nil, setInfiniteJump = nil,
-	getAntiAFK = nil, setAntiAFK = nil,
-	getAntiFling = nil, setAntiFling = nil,
-}
-flyState = { get = nil, set = nil, speed = DEFAULT_FLYSPEED }
-aimbotMM2 = { get = nil, set = nil, smooth = 8, range = 500, statusDot = nil, statusLbl = nil }
-aimbotGeneral = { get = nil, set = nil, fov = 500, smooth = 4 }
+-- ============================================================
+-- FUNCIONES AUXILIARES (compartidas entre Waypoints y Misc)
+-- ============================================================
+local function findGunDropCFrame()
+    local gWorkspace = game:GetService("Workspace")
+    for _, map in ipairs(gWorkspace:GetChildren()) do
+        if map:IsA("Model") and map.Name:find("Map") then
+            local gunDrop = map:FindFirstChild("GunDrop", true)
+            if gunDrop and gunDrop:IsA("BasePart") then
+                return gunDrop.CFrame
+            end
+        end
+    end
+    local gunDrop = gWorkspace:FindFirstChild("GunDrop", true)
+    if gunDrop and gunDrop:IsA("BasePart") then
+        return gunDrop.CFrame
+    end
+    return nil
+end
 
--- Variables de conexiones (scope global para poder apagarlas desde Settings)
-local noclipConn, godConn, antiAFKConn, antiFlingConn = nil, nil, nil, nil
-local flyConn, flyBV, flyBG = nil, nil, nil
--- ✅ FIX 3: mm2Conn y generalConn solo en scope externo, NO re-declarar dentro del bloque Aimbot
-local mm2Conn, generalConn = nil, nil
-local antiFlingLastPos = nil
-local ANTI_FLING_MAX_VEL = 350
-local ANTI_FLING_MAX_DELTA = 80
+local function getPlayerWithItem(itemName)
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player then
+            local char = plr.Character
+            local bp = plr:FindFirstChild("Backpack")
+            if (char and char:FindFirstChild(itemName)) or
+               (bp and bp:FindFirstChild(itemName)) then
+                return plr
+            end
+        end
+    end
+    return nil
+end
+
+local function teleportTo(targetPlr)
+    if not targetPlr then return false end
+    local targetChar = targetPlr.Character
+    if not targetChar then return false end
+    local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
+    local myHRP = getHRP()
+    if targetHRP and myHRP then
+        myHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 3, 0)
+        return true
+    end
+    return false
+end
+
+local function obtainSheriffGun()
+    local char = player.Character
+    if not char then return false end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    local gunCFrame = findGunDropCFrame()
+    if not gunCFrame then return false end
+    local originalCF = hrp.CFrame
+    hrp.CFrame = gunCFrame + Vector3.new(0, 5, 0)
+    task.wait(0.5)
+    hrp.CFrame = originalCF
+    local bp = player:FindFirstChild("Backpack")
+    if bp and bp:FindFirstChild("Gun") then return true end
+    return false
+end
+
 --============================================================
 -- PAGINA: WAYPOINTS
 --============================================================
@@ -1136,162 +1227,6 @@ do
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.Parent = wpPage
 	stylePadding(wpPage, 0,8,0,4)
-
-	makeSectionLabel(wpPage, "Fast access", 0)
-	local quickRow = Instance.new("Frame")
-	quickRow.LayoutOrder = 1
-	quickRow.Size = UDim2.new(1,0,0,42)
-	quickRow.BackgroundTransparency = 1
-	quickRow.BorderSizePixel = 0
-	quickRow.Parent = wpPage
-	local quickLayout = Instance.new("UIListLayout")
-	quickLayout.FillDirection = Enum.FillDirection.Horizontal
-	quickLayout.Padding = UDim.new(0,6)
-	quickLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	quickLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	quickLayout.Parent = quickRow
-
-	local function makeQuickButton(label, action, lo)
-		local btn = Instance.new("TextButton")
-		btn.LayoutOrder = lo
-		btn.Size = UDim2.new(0,0,0,36)
-		btn.AutomaticSize = Enum.AutomaticSize.X
-		btn.BackgroundColor3 = T().accent
-		btn.Text = label
-		btn.TextColor3 = T().bg
-		btn.TextSize = 13
-		btn.Font = Enum.Font.BuilderSansBold
-		btn.BorderSizePixel = 0
-		btn.AutoButtonColor = true
-		btn.Parent = quickRow
-		styleCorner(btn, UDim.new(0,6))
-		local padding = Instance.new("UIPadding")
-		padding.PaddingLeft = UDim.new(0,12)
-		padding.PaddingRight = UDim.new(0,12)
-		padding.Parent = btn
-		btn.MouseButton1Click:Connect(action)
-		return btn
-	end
-
-	local function findGunDropCFrame()
-    local workspace = game:GetService("Workspace")
-    
-    -- Buscar en mapas activos (ajusta el nombre según tu juego)
-    for _, map in ipairs(workspace:GetChildren()) do
-        if map:IsA("Model") and map.Name:find("Map") then
-            local gunDrop = map:FindFirstChild("GunDrop", true)
-            if gunDrop and gunDrop:IsA("BasePart") then
-                return gunDrop.CFrame
-            end
-        end
-    end
-    
-    -- Búsqueda alternativa: buscar en todo el workspace
-    local gunDrop = workspace:FindFirstChild("GunDrop", true)
-    if gunDrop and gunDrop:IsA("BasePart") then
-        return gunDrop.CFrame
-    end
-    
-    return nil
-end
-
--- Búsqueda optimizada de jugador con item específico
-local function getPlayerWithItem(itemName)
-    for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= player then  -- Más limpio que continue
-            local char = plr.Character
-            local bp = plr:FindFirstChild("Backpack")
-            
-            if (char and char:FindFirstChild(itemName)) or 
-               (bp and bp:FindFirstChild(itemName)) then
-                return plr
-            end
-        end
-    end
-    return nil
-end
-
--- Teleport mejorado con verificación de seguridad
-local function teleportTo(targetPlr)
-    if not targetPlr then return false end
-    
-    local targetChar = targetPlr.Character
-    if not targetChar then return false end
-    
-    local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
-    local myHRP = getHRP()
-    
-    if targetHRP and myHRP then
-        myHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 3, 0)
-        return true
-    end
-    return false
-end
-
--- Función para obtener el arma del sheriff
-local function obtainSheriffGun()
-    local char = player.Character
-    if not char then 
-        warn("Personaje no encontrado")
-        return false 
-    end
-    
-    local humanoidRootPart = char:FindFirstChild("HumanoidRootPart")
-    if not humanoidRootPart then 
-        warn("HumanoidRootPart no encontrado")
-        return false 
-    end
-    
-    local gunCFrame = findGunDropCFrame()
-    if not gunCFrame then
-        warn("No se encontró GunDrop en el mapa")
-        return false
-    end
-    
-    -- Guardar posición original
-    local originalCF = humanoidRootPart.CFrame
-    
-    -- Teletransportar sobre el arma
-    humanoidRootPart.CFrame = gunCFrame + Vector3.new(0, 5, 0)
-    
-    -- Esperar a que el jugador agarre el arma automáticamente
-    task.wait(0.5)
-    
-    -- Regresar a la posición original
-    humanoidRootPart.CFrame = originalCF
-    
-    -- Verificar si se obtuvo el arma
-    local bp = player:FindFirstChild("Backpack")
-    if bp and bp:FindFirstChild("Gun") then
-        print("Arma obtenida exitosamente!")
-        return true
-    end
-    
-    return false
-end
-
--- Crear botones con nombres más descriptivos
-makeQuickButton("Ir al Asesino", function()
-    local assassin = getPlayerWithItem("Knife")
-    if teleportTo(assassin) then
-        print("Teletransportado al asesino")
-    else
-        print("No se encontró al asesino")
-    end
-end, 1)
-
-makeQuickButton("Ir al Sheriff", function()
-    local sheriff = getPlayerWithItem("Gun")
-    if teleportTo(sheriff) then
-        print("Teletransportado al sheriff")
-    else
-        print("No se encontró al sheriff")
-    end
-end, 2)
-
-makeQuickButton("Obtener Arma", function()
-    obtainSheriffGun()
-end, 3)
 
 	local saveSection = Instance.new("Frame")
 	saveSection.LayoutOrder = 1
@@ -1499,7 +1434,7 @@ do
 	local tpAllRunning = false
 	local tpAllTask = nil
 
-	local function startTpAllLoop()
+			local function startTpAllLoop()
 		tpAllRunning = true
 		tpAllTask = task.spawn(function()
 			while tpAllRunning do
@@ -1510,11 +1445,11 @@ do
 						local theirHRP = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
 						if hrp and theirHRP then
 							hrp.CFrame = theirHRP.CFrame + Vector3.new(0, 3, 0)
-							task.wait(0.8)
+							task.wait(0.1)
 						end
 					end
 				end
-				task.wait(0.5)
+				task.wait(0.1)
 			end
 		end)
 	end
@@ -1532,10 +1467,10 @@ do
 		setTpAll(v)
 		if v then
 			startTpAllLoop()
-			showToast("TP All activado")
+			showNotification("TP All activado")
 		else
 			stopTpAllLoop()
-			showToast("TP All desactivado")
+			showNotification("TP All desactivado")
 		end
 	end)
 
@@ -1554,49 +1489,6 @@ do
 	plListLayout.Padding = UDim.new(0,6)
 	plListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	plListLayout.Parent = playerListContainer
-
-	-- ============================================================
-	-- FUNCIÓN FLING
-	-- ============================================================
-	local function flingPlayer(targetPlr)
-		if not targetPlr then return false end
-		local targetChar = targetPlr.Character
-		if not targetChar then return false end
-		local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
-		if not targetHRP then return false end
-		
-		-- Guardar posición original
-		local originalPos = targetHRP.Position
-		
-		-- Lanzar al jugador hacia arriba con fuerza
-		local velocity = Instance.new("BodyVelocity")
-		velocity.Velocity = Vector3.new(
-			math.random(-150, 150),
-			math.random(200, 400),
-			math.random(-150, 150)
-		)
-		velocity.MaxForce = Vector3.new(1e6, 1e6, 1e6)
-		velocity.Parent = targetHRP
-		
-		-- También aplicar un BodyGyro para desorientar
-		local gyro = Instance.new("BodyGyro")
-		gyro.MaxTorque = Vector3.new(1e6, 1e6, 1e6)
-		gyro.P = 1e6
-		gyro.CFrame = CFrame.new(targetHRP.Position) * CFrame.Angles(
-			math.rad(math.random(-180, 180)),
-			math.rad(math.random(-180, 180)),
-			math.rad(math.random(-180, 180))
-		)
-		gyro.Parent = targetHRP
-		
-		-- Limpiar después de 2 segundos
-		task.delay(2, function()
-			if velocity and velocity.Parent then velocity:Destroy() end
-			if gyro and gyro.Parent then gyro:Destroy() end
-		end)
-		
-		return true
-	end
 
 	-- ============================================================
 	-- REFRESCAR LISTA DE JUGADORES
@@ -1667,31 +1559,10 @@ do
 			userLbl.Parent = row
 			table.insert(reg.subtexts, userLbl)
 
-			-- ============================================================
-			-- BOTONES MÁS CUADRADOS
-			-- ============================================================
-			local buttonSize = 38
-			local buttonSpacing = 6
-			local totalButtons = 2
-			local totalWidth = (buttonSize * totalButtons) + (buttonSpacing * (totalButtons - 1))
-			
-			local btnContainer = Instance.new("Frame")
-			btnContainer.Size = UDim2.new(0, totalWidth, 0, buttonSize)
-			btnContainer.Position = UDim2.new(1, -totalWidth - 10, 0.5, -buttonSize/2)
-			btnContainer.BackgroundTransparency = 1
-			btnContainer.BorderSizePixel = 0
-			btnContainer.Parent = row
-
-			local btnLayout = Instance.new("UIListLayout")
-			btnLayout.FillDirection = Enum.FillDirection.Horizontal
-			btnLayout.Padding = UDim.new(0, buttonSpacing)
-			btnLayout.SortOrder = Enum.SortOrder.LayoutOrder
-			btnLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-			btnLayout.Parent = btnContainer
-
-			-- Botón TP (cuadrado)
+			-- Botón TP
 			local tpBtn = Instance.new("ImageButton")
-			tpBtn.Size = UDim2.new(0, buttonSize, 0, buttonSize)
+			tpBtn.Size = UDim2.new(0, 38, 0, 38)
+			tpBtn.Position = UDim2.new(1, -48, 0.5, -19)
 			tpBtn.BackgroundColor3 = th.bg
 			tpBtn.BackgroundTransparency = 0.1
 			tpBtn.Image = TP_ICON
@@ -1699,13 +1570,12 @@ do
 			tpBtn.ScaleType = Enum.ScaleType.Fit
 			tpBtn.BorderSizePixel = 0
 			tpBtn.AutoButtonColor = false
-			tpBtn.Parent = btnContainer
+			tpBtn.Parent = row
 			styleCorner(tpBtn, UDim.new(0,8))
 			local tpStroke = styleStroke(tpBtn, 0.7, th.accent)
 			table.insert(reg.panels, tpBtn)
 			table.insert(reg.accentStrokes, tpStroke)
 
-			-- Tooltip TP
 			local tpTip = Instance.new("TextLabel")
 			tpTip.Size = UDim2.new(0,0,0,18)
 			tpTip.AutomaticSize = Enum.AutomaticSize.X
@@ -1726,63 +1596,104 @@ do
 			tpBtn.MouseEnter:Connect(function() tpTip.Visible = true end)
 			tpBtn.MouseLeave:Connect(function() tpTip.Visible = false end)
 
-			-- Botón Fling (cuadrado)
-			local flingBtn = Instance.new("ImageButton")
-			flingBtn.Size = UDim2.new(0, buttonSize, 0, buttonSize)
+			local capturedPlr = plr
+			tpBtn.MouseButton1Click:Connect(function()
+				local hrp = getHRP()
+				local theirHRP = capturedPlr.Character and capturedPlr.Character:FindFirstChild("HumanoidRootPart")
+				if hrp and theirHRP then
+					hrp.CFrame = theirHRP.CFrame + Vector3.new(0, 3, 0)
+					showNotification("Teletransportado a " .. capturedPlr.DisplayName)
+				end
+			end)
+
+			-- Botón FLING
+			local flingBtn = Instance.new("TextButton")
+			flingBtn.Size = UDim2.new(0, 38, 0, 38)
+			flingBtn.Position = UDim2.new(1, -92, 0.5, -19)
 			flingBtn.BackgroundColor3 = th.bg
 			flingBtn.BackgroundTransparency = 0.1
-			flingBtn.Image = FLING_ICON
-			flingBtn.ImageColor3 = th.danger
-			flingBtn.ScaleType = Enum.ScaleType.Fit
+			flingBtn.Text = "💨"
+			flingBtn.TextSize = 18
 			flingBtn.BorderSizePixel = 0
 			flingBtn.AutoButtonColor = false
-			flingBtn.Parent = btnContainer
-			styleCorner(flingBtn, UDim.new(0,8))
+			flingBtn.Parent = row
+			styleCorner(flingBtn, UDim.new(0, 8))
 			local flingStroke = styleStroke(flingBtn, 0.7, th.danger)
 			table.insert(reg.panels, flingBtn)
 			table.insert(reg.dangerStrokes, flingStroke)
 
-			-- Tooltip Fling
 			local flingTip = Instance.new("TextLabel")
-			flingTip.Size = UDim2.new(0,0,0,18)
+			flingTip.Size = UDim2.new(0, 0, 0, 18)
 			flingTip.AutomaticSize = Enum.AutomaticSize.X
-			flingTip.Position = UDim2.new(0.5,0,1,4)
-			flingTip.AnchorPoint = Vector2.new(0.5,0)
-			flingTip.BackgroundColor3 = Color3.fromRGB(0,0,0)
+			flingTip.Position = UDim2.new(0.5, 0, 1, 4)
+			flingTip.AnchorPoint = Vector2.new(0.5, 0)
+			flingTip.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 			flingTip.BackgroundTransparency = 0.8
 			flingTip.Text = "Fling"
-			flingTip.TextColor3 = Color3.new(1,1,1)
+			flingTip.TextColor3 = Color3.new(1, 1, 1)
 			flingTip.Font = Enum.Font.Gotham
 			flingTip.TextSize = 9
 			flingTip.TextXAlignment = Enum.TextXAlignment.Center
 			flingTip.BorderSizePixel = 0
 			flingTip.Visible = false
 			flingTip.Parent = flingBtn
-			styleCorner(flingTip, UDim.new(1,0))
-			stylePadding(flingTip, 2,2,6,6)
+			styleCorner(flingTip, UDim.new(1, 0))
+			stylePadding(flingTip, 2, 2, 6, 6)
 			flingBtn.MouseEnter:Connect(function() flingTip.Visible = true end)
 			flingBtn.MouseLeave:Connect(function() flingTip.Visible = false end)
 
-			-- Capturar jugador
-			local capturedPlr = plr
-			
-			-- Acción TP
-			tpBtn.MouseButton1Click:Connect(function()
-				local hrp = getHRP()
-				local theirHRP = capturedPlr.Character and capturedPlr.Character:FindFirstChild("HumanoidRootPart")
-				if hrp and theirHRP then
-					hrp.CFrame = theirHRP.CFrame + Vector3.new(0, 3, 0)
-					showToast("Teletransportado a " .. capturedPlr.DisplayName)
-				end
-			end)
-
-			-- Acción Fling
 			flingBtn.MouseButton1Click:Connect(function()
-				if flingPlayer(capturedPlr) then
-					showToast("Fling aplicado a " .. capturedPlr.DisplayName .. "!")
-				else
-					showToast("No se pudo aplicar fling")
+				local myChar = player.Character
+				local targetChar = capturedPlr.Character
+				if not myChar or not targetChar then
+					showNotification("Personaje no disponible", "warning")
+					return
 				end
+				local myHRP = myChar:FindFirstChild("HumanoidRootPart")
+				local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
+				if not myHRP or not targetHRP then return end
+
+				-- Teleportarse dentro del target
+				local origCF = myHRP.CFrame
+				myHRP.CFrame = targetHRP.CFrame
+
+				-- Hacer noclip en uno mismo para no morir
+				for _, p in ipairs(myChar:GetDescendants()) do
+					if p:IsA("BasePart") then p.CanCollide = false end
+				end
+
+				-- Girar como loco el HRP propio
+				local bg = Instance.new("BodyGyro")
+				bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+				bg.P = 9e9
+				bg.D = 0
+				bg.CFrame = myHRP.CFrame
+				bg.Parent = myHRP
+
+				local bv = Instance.new("BodyVelocity")
+				bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+				bv.Velocity = Vector3.zero
+				bv.Parent = myHRP
+
+				-- Spam de CFrame para desync violento
+				local spinConn = RunService.Stepped:Connect(function()
+					if not myHRP or not myHRP.Parent then
+						spinConn:Disconnect()
+						return
+					end
+					myHRP.CFrame = myHRP.CFrame * CFrame.Angles(math.rad(360 * 8), math.rad(360 * 5), math.rad(360 * 3))
+				end)
+
+				task.delay(1.5, function()
+					if spinConn then spinConn:Disconnect() end
+					if bg and bg.Parent then bg:Destroy() end
+					if bv and bv.Parent then bv:Destroy() end
+					if myHRP and myHRP.Parent then
+						myHRP.CFrame = origCF
+					end
+				end)
+
+				showNotification("💨 Flinged " .. capturedPlr.DisplayName)
 			end)
 		end
 
@@ -1920,23 +1831,23 @@ do
 
 	pillPL.MouseButton1Click:Connect(function()
 		local v = not getPL(); setPL(v)
-		if v then enableESP_PL() else disableESP_PL() end
+		if v then pcall(enableESP_PL) else pcall(disableESP_PL) end
 	end)
 	pillMM2.MouseButton1Click:Connect(function()
 		local v = not getMM2(); setMM2(v)
-		if v then enableESP_MM2() else disableESP_MM2() end
+		if v then pcall(enableESP_MM2) else pcall(disableESP_MM2) end
 	end)
 	pillOG.MouseButton1Click:Connect(function()
 		local v = not getOG(); setOG(v)
-		if v then enableESP_OG() else disableESP_OG() end
+		if v then pcall(enableESP_OG) else pcall(disableESP_OG) end
 	end)
 	pillNameTag.MouseButton1Click:Connect(function()
 		local v = not getNameTag(); setNameTag(v)
-		if v then enableNameTags() else disableNameTags() end
+		if v then pcall(enableNameTags) else pcall(disableNameTags) end
 	end)
 	pillTeamOnly.MouseButton1Click:Connect(function()
 		local v = not getTeamOnly(); setTeamOnly(v)
-		if getPL() then disableESP_PL(); enableESP_PL() end
+		if getPL() then pcall(disableESP_PL); pcall(enableESP_PL) end
 	end)
 end
 --============================================================
@@ -2336,13 +2247,24 @@ do
 		end
 	end
 
+	local fovCircle = Drawing.new("Circle")
+	fovCircle.Visible = false
+	fovCircle.Thickness = 1.5
+	fovCircle.NumSides = 64
+	fovCircle.Radius = generalFOV
+	fovCircle.Transparency = 0.7
+
 	local function startGeneralAimbot()
+		fovCircle.Visible = true
+		fovCircle.Color = T().accent
 		generalConn = RunService.RenderStepped:Connect(function()
 			if not getStateAimbotGeneral() then return end
 			local camera  = workspace.CurrentCamera
 			local myHRP   = getHRP()
 			if not myHRP then return end
 			local mousePos = UserInputService:GetMouseLocation()
+			fovCircle.Position = mousePos
+			fovCircle.Radius = generalFOV
 			local closest, closestDist = nil, generalFOV
 			for _, plr in ipairs(Players:GetPlayers()) do
 				if plr == player then continue end
@@ -2363,11 +2285,15 @@ do
 				local targetCF = CFrame.new(camera.CFrame.Position, closest.Position)
 				local alpha    = math.clamp(1/generalSmooth, 0.05, 1)
 				camera.CFrame  = camera.CFrame:Lerp(targetCF, alpha)
+				fovCircle.Color = T().accent
+			else
+				fovCircle.Color = T().subtext
 			end
 		end)
 	end
 
 	local function stopGeneralAimbot()
+		fovCircle.Visible = false
 		if generalConn then generalConn:Disconnect(); generalConn = nil end
 	end
 
@@ -2409,8 +2335,8 @@ do
 			local ru = char:FindFirstChild("RightUpperLeg")
 			if ru and rl and rf then
 				rf.Transparency = 1; rl.Transparency = 1
-				ru.MeshId    = "http://www.roblox.com/asset/?id=902942096"
-				ru.TextureID = "http://roblox.com/asset/?id=902843398"
+			ru.MeshId    = "rbxassetid://902942096"
+			ru.TextureID = "rbxassetid://902843398"
 				ru.Color = Color3.new(1,1,1); ru.Transparency = 0
 			end
 		else
@@ -2498,7 +2424,7 @@ do
 	local function removeNoobFace()
 		local char = player.Character; if not char then return end
 		local head = char:FindFirstChild("Head"); if not head then return end
-		local face = head:FindFirstChild("face")
+		local face = head:FindFirstChild("face") or head:FindFirstChildOfClass("Decal")
 		if face then face.Texture = "rbxassetid://1369239677" end
 	end
 
@@ -2834,12 +2760,12 @@ do
 		lineNumLabel.Text = table.concat(nums, "\n")
 	end)
 
-	-- Barra de estado (más compacta)
+	-- Barra de estado (con colores del tema)
 	local statusBar = Instance.new("Frame")
 	statusBar.Size = UDim2.new(1,0,0,22)
 	statusBar.Position = UDim2.new(0,0,1,-44)
-	statusBar.BackgroundColor3 = Color3.fromRGB(6,6,10)
-	statusBar.BackgroundTransparency = 0.1
+	statusBar.BackgroundColor3 = th.bg
+	statusBar.BackgroundTransparency = 0.25
 	statusBar.BorderSizePixel = 0
 	statusBar.Parent = executorPage
 	styleCorner(statusBar, UDim.new(0,6))
@@ -2853,7 +2779,7 @@ do
 	local statusDot = Instance.new("Frame")
 	statusDot.Size = UDim2.new(0,6,0,6)
 	statusDot.Position = UDim2.new(0,10,0.5,-3)
-	statusDot.BackgroundColor3 = Color3.fromRGB(80,80,100)
+	statusDot.BackgroundColor3 = th.subtext
 	statusDot.BorderSizePixel = 0
 	statusDot.Parent = statusBar
 	styleCorner(statusDot, UDim.new(1,0))
@@ -2863,7 +2789,7 @@ do
 	statusLbl.Position = UDim2.new(0,22,0,0)
 	statusLbl.BackgroundTransparency = 1
 	statusLbl.Text = "Ready"
-	statusLbl.TextColor3 = Color3.fromRGB(100,110,130)
+	statusLbl.TextColor3 = th.subtext
 	statusLbl.Font = Enum.Font.Code
 	statusLbl.TextSize = 11
 	statusLbl.TextXAlignment = Enum.TextXAlignment.Left
@@ -3013,7 +2939,7 @@ end
 
 
 --============================================================
--- PAGINA: GAME SCRIPTS
+-- PAGINA: GAME SCRIPTS (diseño moderno)
 --============================================================
 local gameScriptsPage = newPage("Scripts")
 do
@@ -3023,49 +2949,100 @@ do
 	layout.Parent = gameScriptsPage
 	stylePadding(gameScriptsPage, 0,8,0,4)
 
-	makeSectionLabel(gameScriptsPage, "More Scripts", 0)
+	makeSectionLabel(gameScriptsPage, "Script Library", 0)
 
-	local function makeScriptCard(parent, gameName, gameDesc, scriptFunc, badgeText, badgeColor, lo)
+	local scriptsData = {
+		{
+			name = "Infinite Yield",
+			desc = "Admin commands for any game",
+			badge = "FE Admin",
+			color = Color3.fromRGB(255, 105, 180),
+			icon = "rbxassetid://7484057032",
+			func = function()
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+			end,
+		},
+		{
+			name = "Dex Explorer",
+			desc = "Roblox explorer / inspector",
+			badge = "Developer",
+			color = Color3.fromRGB(60, 160, 255),
+			icon = "rbxassetid://6031065931",
+			func = function()
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/InfinitySolutions/Dex-Fork/main/dex.lua"))()
+			end,
+		},
+		{
+			name = "RemoteSpy",
+			desc = "View all remote events/functions",
+			badge = "Debug",
+			color = Color3.fromRGB(255, 180, 40),
+			icon = "rbxassetid://6031065931",
+			func = function()
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/exxtremestuffs/SimpleSpySource/master/SimpleSpy.lua"))()
+			end,
+		},
+	}
+
+	for idx, data in ipairs(scriptsData) do
 		local th = T()
 		local card = Instance.new("Frame")
-		card.LayoutOrder = lo or 1
-		card.Size = UDim2.new(1,0,0,90)
+		card.LayoutOrder = idx
+		card.Size = UDim2.new(1, 0, 0, 84)
 		card.BackgroundColor3 = th.bg
-		card.BackgroundTransparency = 0.15
+		card.BackgroundTransparency = 0.12
 		card.BorderSizePixel = 0
-		card.Parent = parent
-		styleCorner(card, UDim.new(0,12))
-		styleStroke(card, 0.82)
+		card.Parent = gameScriptsPage
+		styleCorner(card, UDim.new(0, 12))
+		styleStroke(card, 0.78)
 		table.insert(reg.panels, card)
 
-		local stripe = Instance.new("Frame")
-		stripe.Size = UDim2.new(0,4,1,-20)
-		stripe.Position = UDim2.new(0,0,0,10)
-		stripe.BackgroundColor3 = badgeColor or th.accent
-		stripe.BackgroundTransparency = 0
-		stripe.BorderSizePixel = 0
-		stripe.Parent = card
-		styleCorner(stripe, UDim.new(1,0))
+		local glow = Instance.new("Frame")
+		glow.Size = UDim2.new(0, 4, 1, 0)
+		glow.BackgroundColor3 = data.color
+		glow.BackgroundTransparency = 0.3
+		glow.BorderSizePixel = 0
+		glow.Parent = card
+		styleCorner(glow, UDim.new(1, 0))
 
-		local badge = Instance.new("TextLabel")
-		badge.Size = UDim2.new(0,0,0,20)
-		badge.AutomaticSize = Enum.AutomaticSize.X
-		badge.Position = UDim2.new(0,14,0,10)
-		badge.BackgroundColor3 = badgeColor or th.accent
-		badge.BackgroundTransparency = 0.75
-		badge.Text = "  "..(badgeText or "Script").."  "
-		badge.TextColor3 = badgeColor or th.accent
-		badge.Font = Enum.Font.GothamBold
-		badge.TextSize = 9
-		badge.BorderSizePixel = 0
-		badge.Parent = card
-		styleCorner(badge, UDim.new(1,0))
+		local iconFrame = Instance.new("Frame")
+		iconFrame.Size = UDim2.new(0, 34, 0, 34)
+		iconFrame.Position = UDim2.new(0, 14, 0.5, -17)
+		iconFrame.BackgroundColor3 = data.color
+		iconFrame.BackgroundTransparency = 0.7
+		iconFrame.BorderSizePixel = 0
+		iconFrame.Parent = card
+		styleCorner(iconFrame, UDim.new(1, 0))
+
+		local iconLbl = Instance.new("TextLabel")
+		iconLbl.Size = UDim2.new(1, 0, 1, 0)
+		iconLbl.BackgroundTransparency = 1
+		iconLbl.Text = data.name:sub(1, 1):upper()
+		iconLbl.TextColor3 = data.color
+		iconLbl.Font = Enum.Font.GothamBold
+		iconLbl.TextSize = 16
+		iconLbl.Parent = iconFrame
+		table.insert(reg.accentTexts, iconLbl)
+
+		local badgeLbl = Instance.new("TextLabel")
+		badgeLbl.Size = UDim2.new(0, 0, 0, 18)
+		badgeLbl.AutomaticSize = Enum.AutomaticSize.X
+		badgeLbl.Position = UDim2.new(0, 56, 0, 10)
+		badgeLbl.BackgroundColor3 = data.color
+		badgeLbl.BackgroundTransparency = 0.72
+		badgeLbl.Text = "  "..data.badge.."  "
+		badgeLbl.TextColor3 = data.color
+		badgeLbl.Font = Enum.Font.GothamBold
+		badgeLbl.TextSize = 9
+		badgeLbl.BorderSizePixel = 0
+		badgeLbl.Parent = card
+		styleCorner(badgeLbl, UDim.new(1, 0))
 
 		local nameLbl = Instance.new("TextLabel")
-		nameLbl.Size = UDim2.new(1,-140,0,22)
-		nameLbl.Position = UDim2.new(0,14,0,32)
+		nameLbl.Size = UDim2.new(1, -170, 0, 20)
+		nameLbl.Position = UDim2.new(0, 56, 0, 32)
 		nameLbl.BackgroundTransparency = 1
-		nameLbl.Text = gameName
+		nameLbl.Text = data.name
 		nameLbl.TextColor3 = th.text
 		nameLbl.Font = Enum.Font.GothamBold
 		nameLbl.TextSize = 15
@@ -3074,10 +3051,10 @@ do
 		table.insert(reg.texts, nameLbl)
 
 		local descLbl = Instance.new("TextLabel")
-		descLbl.Size = UDim2.new(1,-140,0,18)
-		descLbl.Position = UDim2.new(0,14,0,54)
+		descLbl.Size = UDim2.new(1, -170, 0, 16)
+		descLbl.Position = UDim2.new(0, 56, 0, 54)
 		descLbl.BackgroundTransparency = 1
-		descLbl.Text = gameDesc
+		descLbl.Text = data.desc
 		descLbl.TextColor3 = th.subtext
 		descLbl.Font = Enum.Font.Gotham
 		descLbl.TextSize = 11
@@ -3087,86 +3064,309 @@ do
 		table.insert(reg.subtexts, descLbl)
 
 		local runBtn = Instance.new("TextButton")
-		runBtn.Size = UDim2.new(0,100,0,38)
-		runBtn.Position = UDim2.new(1,-108,0.5,-19)
-		runBtn.BackgroundColor3 = badgeColor or th.accent
-		runBtn.Text = "Execute"
-		runBtn.TextColor3 = th.bg
-		runBtn.TextSize = 13
+		runBtn.Size = UDim2.new(0, 82, 0, 34)
+		runBtn.Position = UDim2.new(1, -92, 0.5, -17)
+		runBtn.BackgroundColor3 = data.color
+		runBtn.BackgroundTransparency = 0
+		runBtn.Text = "Run"
+		runBtn.TextColor3 = Color3.new(1, 1, 1)
+		runBtn.TextSize = 12
 		runBtn.Font = Enum.Font.GothamBold
 		runBtn.BorderSizePixel = 0
 		runBtn.AutoButtonColor = false
 		runBtn.Parent = card
-		styleCorner(runBtn, UDim.new(0,9))
+		styleCorner(runBtn, UDim.new(0, 8))
 
 		runBtn.MouseEnter:Connect(function() TweenService:Create(runBtn, twI, {BackgroundTransparency=0.2}):Play() end)
 		runBtn.MouseLeave:Connect(function() TweenService:Create(runBtn, twI, {BackgroundTransparency=0}):Play() end)
 		runBtn.MouseButton1Click:Connect(function()
-			TweenService:Create(runBtn, TweenInfo.new(0.08), {Size=UDim2.new(0,96,0,34)}):Play()
-			task.delay(0.12, function() TweenService:Create(runBtn, TweenInfo.new(0.12), {Size=UDim2.new(0,100,0,38)}):Play() end)
-			pcall(scriptFunc)
+			TweenService:Create(runBtn, TweenInfo.new(0.08), {Size=UDim2.new(0, 78, 0, 30)}):Play()
+			task.delay(0.12, function() TweenService:Create(runBtn, TweenInfo.new(0.12), {Size=UDim2.new(0, 82, 0, 34)}):Play() end)
+			local ok, err = pcall(data.func)
+			if not ok then showNotification("Script error: "..tostring(err):sub(1, 30), "danger") end
 		end)
-		return card
 	end
-
-	makeScriptCard(
-		gameScriptsPage,
-		"Infinite yield",
-		"Universal Script 📌",
-		function()
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
-		end,
-		"FE Best",
-		Color3.fromRGB(255, 105, 180),
-		1
-	)
-
-	local th = T()
-	local comingSoon = Instance.new("Frame")
-	comingSoon.LayoutOrder = 99
-	comingSoon.Size = UDim2.new(1,0,0,50)
-	comingSoon.BackgroundColor3 = th.bg
-	comingSoon.BackgroundTransparency = 0.35
-	comingSoon.BorderSizePixel = 0
-	comingSoon.Parent = gameScriptsPage
-	styleCorner(comingSoon, UDim.new(0,10))
-	styleStroke(comingSoon, 0.70)
-	table.insert(reg.panels, comingSoon)
-	local csLbl = Instance.new("TextLabel")
-	csLbl.Size = UDim2.new(1,0,1,0)
-	csLbl.BackgroundTransparency = 1
-	csLbl.Text = "+ More Scripts is coming"
-	csLbl.TextColor3 = th.subtext
-	csLbl.Font = Enum.Font.GothamSemibold
-	csLbl.TextSize = 12
-	csLbl.Parent = comingSoon
-	table.insert(reg.subtexts, csLbl)
 end
 
 --============================================================
--- ✅ MEJORA 7: Toast de notificación (definido antes de Settings)
+-- PAGINA: MISC
 --============================================================
-local function showToast(msg)
-	local toast = Instance.new("TextLabel")
-	toast.Size = UDim2.new(0, 220, 0, 36)
-	toast.Position = UDim2.new(0.5, -110, 1, -60)
-	toast.BackgroundColor3 = T().accent
-	toast.BackgroundTransparency = 0.1
-	toast.TextColor3 = T().bg
-	toast.Text = msg
-	toast.Font = Enum.Font.GothamBold
-	toast.TextSize = 13
-	toast.BorderSizePixel = 0
-	toast.ZIndex = 100
-	toast.Parent = screenGui
-	styleCorner(toast, UDim.new(0, 8))
-	TweenService:Create(toast, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
-	task.delay(1.8, function()
-		TweenService:Create(toast, TweenInfo.new(0.4), {
+local miscPage = newPage("Misc")
+do
+	local layout = Instance.new("UIListLayout")
+	layout.Padding = UDim.new(0,8)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = miscPage
+	stylePadding(miscPage, 0,8,0,4)
+
+	-- ============================================================
+	-- AUTO GET GUNDROP
+	-- ============================================================
+	makeSectionLabel(miscPage, "Auto Get GunDrop", 1)
+	local pillGunDrop, setGunDrop, getGunDrop = makeToggleRow(miscPage, "Auto Get GunDrop", 2)
+	local gunDropConn = nil
+	local function startGunDrop()
+		gunDropConn = task.spawn(function()
+			while getGunDrop() do
+				local success = obtainSheriffGun()
+				if success then
+					showNotification("GunDrop obtained!")
+				end
+				task.wait(3)
+			end
+		end)
+	end
+	local function stopGunDrop()
+		if gunDropConn then
+			coroutine.close(gunDropConn)
+			gunDropConn = nil
+		end
+	end
+	pillGunDrop.MouseButton1Click:Connect(function()
+		local v = not getGunDrop(); setGunDrop(v)
+		if v then startGunDrop() else stopGunDrop() end
+	end)
+
+	-- ============================================================
+	-- QUICK ACCESS BUTTONS
+	-- ============================================================
+	makeSectionLabel(miscPage, "Quick access", 3)
+	local quickRow = Instance.new("Frame")
+	quickRow.LayoutOrder = 4
+	quickRow.Size = UDim2.new(1,0,0,42)
+	quickRow.BackgroundTransparency = 1
+	quickRow.BorderSizePixel = 0
+	quickRow.Parent = miscPage
+	local quickLayout = Instance.new("UIListLayout")
+	quickLayout.FillDirection = Enum.FillDirection.Horizontal
+	quickLayout.Padding = UDim.new(0,6)
+	quickLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	quickLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	quickLayout.Parent = quickRow
+
+	local function makeQuickButton(label, action, lo)
+		local btn = Instance.new("TextButton")
+		btn.LayoutOrder = lo
+		btn.Size = UDim2.new(0,0,0,36)
+		btn.AutomaticSize = Enum.AutomaticSize.X
+		btn.BackgroundColor3 = T().accent
+		btn.Text = label
+		btn.TextColor3 = T().bg
+		btn.TextSize = 13
+		btn.Font = Enum.Font.BuilderSansBold
+		btn.BorderSizePixel = 0
+		btn.AutoButtonColor = true
+		btn.Parent = quickRow
+		styleCorner(btn, UDim.new(0,6))
+		local padding = Instance.new("UIPadding")
+		padding.PaddingLeft = UDim.new(0,12)
+		padding.PaddingRight = UDim.new(0,12)
+		padding.Parent = btn
+		btn.MouseButton1Click:Connect(action)
+		return btn
+	end
+
+	makeQuickButton("Murder TP", function()
+		local assassin = getPlayerWithItem("Knife")
+		if teleportTo(assassin) then
+			showNotification("Teleported to Murder")
+		else
+			showNotification("No murder found", "warning")
+		end
+	end, 1)
+
+	makeQuickButton("Sheriff TP", function()
+		local sheriff = getPlayerWithItem("Gun")
+		if teleportTo(sheriff) then
+			showNotification("Teleported to Sheriff")
+		else
+			showNotification("No sheriff found", "warning")
+		end
+	end, 2)
+
+	makeQuickButton("Get Gun", function()
+		if obtainSheriffGun() then
+			showNotification("Gun obtained!")
+		else
+			showNotification("Gun not found", "warning")
+		end
+	end, 3)
+
+	-- ============================================================
+	-- SILENT AIM
+	-- ============================================================
+	makeSectionLabel(miscPage, "Silent Aim", 5)
+	local pillSilentAim, setSilentAim, getSilentAim = makeToggleRow(miscPage, "Silent Aim", 6)
+	local silentAimConn = nil
+	local mouse = player:GetMouse()
+	local function startSilentAim()
+		silentAimConn = RunService.RenderStepped:Connect(function()
+			if not getSilentAim() then return end
+			local target = getPlayerWithItem("Knife")
+			if not target or not target.Character then return end
+			local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
+			if not targetHRP then return end
+			local camera = workspace.CurrentCamera
+			local hitCF = CFrame.new(camera.CFrame.Position, targetHRP.Position)
+			pcall(function()
+				mouse.Hit = hitCF
+				mouse.Target = targetHRP
+			end)
+		end)
+	end
+	local function stopSilentAim()
+		if silentAimConn then silentAimConn:Disconnect(); silentAimConn = nil end
+	end
+	pillSilentAim.MouseButton1Click:Connect(function()
+		local v = not getSilentAim(); setSilentAim(v)
+		if v then startSilentAim() else stopSilentAim() end
+	end)
+
+	-- ============================================================
+	-- AUTO SHOOT (with wall detection)
+	-- ============================================================
+	makeSectionLabel(miscPage, "Auto Shoot", 7)
+	local pillAutoShoot, setAutoShoot, getAutoShoot = makeToggleRow(miscPage, "Auto Shoot", 8)
+	local autoShootConn = nil
+	local lastShotTime = 0
+
+	local function getTargetFromAimbot()
+		local camera = workspace.CurrentCamera
+		local mousePos = UserInputService:GetMouseLocation()
+		local closest, closestDist = nil, 500
+		for _, plr in ipairs(Players:GetPlayers()) do
+			if plr == player then continue end
+			local char = plr.Character
+			if not char then continue end
+			local hrp = char:FindFirstChild("HumanoidRootPart")
+			local hum = char:FindFirstChildOfClass("Humanoid")
+			if not hrp or not hum or hum.Health <= 0 then continue end
+			local screenPos, onScreen = camera:WorldToScreenPoint(hrp.Position)
+			if not onScreen then continue end
+			local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+			if dist < closestDist then
+				closestDist = dist
+				closest = plr
+			end
+		end
+		return closest
+	end
+
+	local function startAutoShoot()
+		autoShootConn = RunService.RenderStepped:Connect(function()
+			if not getAutoShoot() then return end
+			local target = getPlayerWithItem("Knife") or getTargetFromAimbot()
+			if not target or not target.Character then return end
+			local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
+			if not targetHRP then return end
+			local camera = workspace.CurrentCamera
+
+			-- Wall detection
+			local rayParams = RaycastParams.new()
+			rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+			local ignore = {player.Character, camera}
+			rayParams.FilterDescendantsInstances = ignore
+
+			local origin = camera.CFrame.Position
+			local direction = (targetHRP.Position - origin).Unit * 1000
+			local result = workspace:Raycast(origin, direction, rayParams)
+
+			-- Only shoot if no wall blocks the view
+			if not result then
+				local now = tick()
+				if now - lastShotTime > 0.3 then
+					lastShotTime = now
+					pcall(function()
+						local vim = game:GetService("VirtualInputManager")
+						vim:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+						task.wait(0.03)
+						vim:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+					end)
+				end
+			end
+		end)
+	end
+	local function stopAutoShoot()
+		if autoShootConn then autoShootConn:Disconnect(); autoShootConn = nil end
+	end
+	pillAutoShoot.MouseButton1Click:Connect(function()
+		local v = not getAutoShoot(); setAutoShoot(v)
+		if v then startAutoShoot() else stopAutoShoot() end
+	end)
+end
+
+--============================================================
+-- NOTIFICATION SYSTEM (animado desde la derecha, colores del tema)
+--============================================================
+local notifIndex = 0
+
+local function showNotification(msg, notifType)
+	local th = T()
+	notifIndex += 1
+	local myIdx = notifIndex
+
+	local notif = Instance.new("Frame")
+	notif.Size = UDim2.new(0, 0, 0, 46)
+	notif.Position = UDim2.new(1, 0, 0, 12 + (myIdx - 1) * 54)
+	notif.BackgroundColor3 = th.bg
+	notif.BackgroundTransparency = 0.08
+	notif.BorderSizePixel = 0
+	notif.ZIndex = 100
+	notif.ClipsDescendants = true
+	notif.Parent = screenGui
+	styleCorner(notif, UDim.new(0, 10))
+
+	local accentBar = Instance.new("Frame")
+	accentBar.Size = UDim2.new(0, 4, 1, 0)
+	accentBar.BorderSizePixel = 0
+	accentBar.Parent = notif
+	local barColor = (notifType == "danger" and th.danger) or (notifType == "warning" and Color3.fromRGB(255, 180, 40)) or th.accent
+	accentBar.BackgroundColor3 = barColor
+	styleCorner(accentBar, UDim.new(1, 0))
+
+	local icon = Instance.new("TextLabel")
+	icon.Size = UDim2.new(0, 28, 1, 0)
+	icon.Position = UDim2.new(0, 12, 0, 0)
+	icon.BackgroundTransparency = 1
+	local iconText = ""
+	if notifType == "danger" then iconText = "!"
+	elseif notifType == "warning" then iconText = "?"
+	end
+	icon.Text = iconText
+	icon.TextColor3 = barColor
+	icon.Font = Enum.Font.GothamBold
+	icon.TextSize = 18
+	icon.TextXAlignment = Enum.TextXAlignment.Center
+	icon.Parent = notif
+
+	local msgLbl = Instance.new("TextLabel")
+	msgLbl.Size = UDim2.new(1, -56, 1, 0)
+	msgLbl.Position = UDim2.new(0, 44, 0, 0)
+	msgLbl.BackgroundTransparency = 1
+	msgLbl.Text = msg
+	msgLbl.TextColor3 = th.text
+	msgLbl.Font = Enum.Font.GothamSemibold
+	msgLbl.TextSize = 13
+	msgLbl.TextXAlignment = Enum.TextXAlignment.Left
+	msgLbl.TextTruncate = Enum.TextTruncate.AtEnd
+	msgLbl.Parent = notif
+
+	local notifWidth = math.clamp(#msg * 8 + 80, 200, 400)
+
+	local slideIn = TweenService:Create(notif, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+		Size = UDim2.new(0, notifWidth, 0, 46)
+	})
+	slideIn:Play()
+
+	task.delay(2.5, function()
+		local slideOut = TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+			Size = UDim2.new(0, 0, 0, 46),
 			BackgroundTransparency = 1,
-			Position = UDim2.new(0.5, -110, 1, -40)
-		}):Play()
-		task.delay(0.4, function() if toast and toast.Parent then toast:Destroy() end end)
+		})
+		slideOut:Play()
+		slideOut.Completed:Once(function()
+			if notif and notif.Parent then notif:Destroy() end
+		end)
 	end)
 end
 --============================================================
@@ -3306,7 +3506,7 @@ do
 			applyTheme()
 			switchTab(activeTabName)
 			-- ✅ MEJORA 7: notificación al cambiar tema
-			showToast("Tema: " .. def.name)
+			showNotification("Tema: " .. def.name)
 		end)
 	end
 
@@ -3613,22 +3813,24 @@ end)
 task.spawn(function()
 	while true do
 		task.wait(2)
-		if espStates.getMM2() then enableESP_MM2() end
-		if espStates.getOG()  then enableESP_OG()  end
-		if espStates.getPL() then
-			for _, plr in ipairs(Players:GetPlayers()) do
-				if plr.Character then
-					local h = plr.Character:FindFirstChild("HHB_ESP_PL")
-					if h and not isEnemy(plr) then h:Destroy(); espPL[plr]=nil
-					elseif not h and isEnemy(plr) then applyESP_PL(plr, plr.Character) end
+		pcall(function()
+			if espStates.getMM2() then enableESP_MM2() end
+			if espStates.getOG()  then enableESP_OG()  end
+			if espStates.getPL() then
+				for _, plr in ipairs(Players:GetPlayers()) do
+					if plr.Character then
+						local h = plr.Character:FindFirstChild("HHB_ESP_PL")
+						if h and not isEnemy(plr) then h:Destroy(); espPL[plr]=nil
+						elseif not h and isEnemy(plr) then applyESP_PL(plr, plr.Character) end
+					end
 				end
 			end
-		end
+		end)
 	end
 end)
 
 --============================================================
--- TOGGLE FLOTANTE Y TECLA RightShift
+-- TOGGLE FLOTANTE Y TECLA F3
 --============================================================
 local function openGui()
     panel.Visible = true
@@ -3687,7 +3889,7 @@ end)
 
 UserInputService.InputBegan:Connect(function(inp, processed)
 	if processed then return end
-	if inp.KeyCode == Enum.KeyCode.RightShift then
+	if inp.KeyCode == Enum.KeyCode.F3 then
 		if panel.Visible then closeGui() else openGui() end
 	end
 end)
