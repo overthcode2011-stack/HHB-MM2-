@@ -1096,8 +1096,8 @@ do
 		return card
 	end
 
-	makeOwnerCard(homePage, "OverthaneRBX", "Developer · Hub Creator", 5)
-	makeOwnerCard(homePage, "ReplicatedBacon0", "Co-Owner · Test & Scripts", 6)
+	makeOwnerCard(homePage, "OverthaneRBX ", "Developer · Hub Creator", 5)
+	makeOwnerCard(homePage, "ReplicatedBacon_0", "Co-Owner · Test & Scripts", 6)
 
 	-- ===== SECCION: CARACTERISTICAS =====
 	makeSectionLabel(homePage, "Features", 7)
@@ -3897,4 +3897,4 @@ end)
 -- Inicializar
 switchTab("Home")
 applyTheme()
-print("Happy Hub Licenced by Github > By Odecode.")
+print("Happy Hub Licenced by Github > By Odecode .")
