@@ -949,7 +949,7 @@ do
 	-- ===== SECCION: MUSICA =====
 	makeSectionLabel(homePage, "Music", 2)
 
-	local pillMusic, setMusic, getMusic = makeToggleRow(homePage, "EYUHH! - HR", 3)
+	local pillMusic, setMusic, getMusic = makeToggleRow(homePage, "Low Cortisol - Ai Dua Em V", 3)
 
 	local musicSound = nil
 	local musicActive = false
@@ -960,7 +960,7 @@ do
 			musicSound = nil
 		end
 		musicSound = Instance.new("Sound")
-		musicSound.SoundId = "rbxassetid://16190782181"
+		musicSound.SoundId = "rbxassetid://110919391228823"
 		musicSound.Volume = 0.5
 		musicSound.Looped = true
 		musicSound.Parent = playerGui
