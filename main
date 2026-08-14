@@ -1606,96 +1606,66 @@ do
 				end
 			end)
 
-			-- Botón FLING
-			local flingBtn = Instance.new("TextButton")
-			flingBtn.Size = UDim2.new(0, 38, 0, 38)
-			flingBtn.Position = UDim2.new(1, -92, 0.5, -19)
-			flingBtn.BackgroundColor3 = th.bg
-			flingBtn.BackgroundTransparency = 0.1
-			flingBtn.Text = "💨"
-			flingBtn.TextSize = 18
-			flingBtn.BorderSizePixel = 0
-			flingBtn.AutoButtonColor = false
-			flingBtn.Parent = row
-			styleCorner(flingBtn, UDim.new(0, 8))
-			local flingStroke = styleStroke(flingBtn, 0.7, th.danger)
-			table.insert(reg.panels, flingBtn)
-			table.insert(reg.dangerStrokes, flingStroke)
-
-			local flingTip = Instance.new("TextLabel")
-			flingTip.Size = UDim2.new(0, 0, 0, 18)
-			flingTip.AutomaticSize = Enum.AutomaticSize.X
-			flingTip.Position = UDim2.new(0.5, 0, 1, 4)
-			flingTip.AnchorPoint = Vector2.new(0.5, 0)
-			flingTip.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-			flingTip.BackgroundTransparency = 0.8
-			flingTip.Text = "Fling"
-			flingTip.TextColor3 = Color3.new(1, 1, 1)
-			flingTip.Font = Enum.Font.Gotham
-			flingTip.TextSize = 9
-			flingTip.TextXAlignment = Enum.TextXAlignment.Center
-			flingTip.BorderSizePixel = 0
-			flingTip.Visible = false
-			flingTip.Parent = flingBtn
-			styleCorner(flingTip, UDim.new(1, 0))
-			stylePadding(flingTip, 2, 2, 6, 6)
-			flingBtn.MouseEnter:Connect(function() flingTip.Visible = true end)
-			flingBtn.MouseLeave:Connect(function() flingTip.Visible = false end)
-
 			flingBtn.MouseButton1Click:Connect(function()
-				local myChar = player.Character
-				local targetChar = capturedPlr.Character
-				if not myChar or not targetChar then
-					showNotification("Personaje no disponible", "warning")
-					return
-				end
-				local myHRP = myChar:FindFirstChild("HumanoidRootPart")
-				local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
-				if not myHRP or not targetHRP then return end
+    local myChar = player.Character
+    local targetChar = capturedPlr.Character
+    if not myChar or not targetChar then
+        showNotification("Personaje no disponible", "warning")
+        return
+    end
+    local myHRP = myChar:FindFirstChild("HumanoidRootPart")
+    local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
+    if not myHRP or not targetHRP then return end
 
-				-- Teleportarse dentro del target
-				local origCF = myHRP.CFrame
-				myHRP.CFrame = targetHRP.CFrame
+    -- Guardamos la posición original y nos teletransportamos al target
+    local origCF = myHRP.CFrame
+    myHRP.CFrame = targetHRP.CFrame
 
-				-- Hacer noclip en uno mismo para no morir
-				for _, p in ipairs(myChar:GetDescendants()) do
-					if p:IsA("BasePart") then p.CanCollide = false end
-				end
+    -- Activamos noclip para no morir
+    for _, p in ipairs(myChar:GetDescendants()) do
+        if p:IsA("BasePart") then p.CanCollide = false end
+    end
 
-				-- Girar como loco el HRP propio
-				local bg = Instance.new("BodyGyro")
-				bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-				bg.P = 9e9
-				bg.D = 0
-				bg.CFrame = myHRP.CFrame
-				bg.Parent = myHRP
+    -- Duración del fling (en segundos)
+    local duration = 1.5
+    local startTime = tick()
 
-				local bv = Instance.new("BodyVelocity")
-				bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-				bv.Velocity = Vector3.zero
-				bv.Parent = myHRP
+    -- Variable para controlar el loop
+    local running = true
 
-				-- Spam de CFrame para desync violento
-				local spinConn = RunService.Stepped:Connect(function()
-					if not myHRP or not myHRP.Parent then
-						spinConn:Disconnect()
-						return
-					end
-					myHRP.CFrame = myHRP.CFrame * CFrame.Angles(math.rad(360 * 8), math.rad(360 * 5), math.rad(360 * 3))
-				end)
+    -- Ejecutamos el fling en una corrutina
+    task.spawn(function()
+        while running and myHRP and myHRP.Parent do
+            local velo = myHRP.Velocity
+            -- Multiplicamos y añadimos fuerza vertical
+            myHRP.Velocity = velo * 10000 + Vector3.new(0, 10000, 0)
+            -- Esperamos un frame (RenderStepped)
+            RunService.RenderStepped:Wait()
+            -- Restauramos la velocidad original (esto genera el "fling")
+            myHRP.Velocity = velo
+            -- Esperamos otro frame (Stepped)
+            RunService.Stepped:Wait()
 
-				task.delay(1.5, function()
-					if spinConn then spinConn:Disconnect() end
-					if bg and bg.Parent then bg:Destroy() end
-					if bv and bv.Parent then bv:Destroy() end
-					if myHRP and myHRP.Parent then
-						myHRP.CFrame = origCF
-					end
-				end)
+            -- Si pasó el tiempo, salimos
+            if tick() - startTime > duration then
+                running = false
+                break
+            end
+        end
 
-				showNotification("💨 Flinged " .. capturedPlr.DisplayName)
-			end)
-		end
+        -- Limpieza: restaurar posición y quitar noclip
+        if myHRP and myHRP.Parent then
+            myHRP.CFrame = origCF
+        end
+        if myChar then
+            for _, p in ipairs(myChar:GetDescendants()) do
+                if p:IsA("BasePart") then p.CanCollide = true end
+            end
+        end
+    end)
+
+    showNotification("💨 Flinged " .. capturedPlr.DisplayName)
+end)
 
 		if #allPlayers <= 1 then
 			local noPlayers = Instance.new("TextLabel")
