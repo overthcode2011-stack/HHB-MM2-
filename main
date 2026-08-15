@@ -1415,7 +1415,7 @@ do
 	refreshList()
 end
 --============================================================
--- PAGINA: JUGADORES (CON TP ALL TOGGLE Y FLING)
+-- PAGINA: JUGADORES (CON TP + FOLLOW DENTRO DEL PLAYER)
 --============================================================
 local jugadoresPage = newPage("Jugadores")
 do
@@ -1428,13 +1428,13 @@ do
 	makeSectionLabel(jugadoresPage, "Teleport to any player", 1)
 
 	-- ============================================================
-	-- TOGGLE TP ALL (Reemplaza el botón simple)
+	-- TOGGLE TP ALL (Loop)
 	-- ============================================================
 	local tpAllPill, setTpAll, getTpAll = makeToggleRow(jugadoresPage, "TP All (Loop)", 2)
 	local tpAllRunning = false
 	local tpAllTask = nil
 
-			local function startTpAllLoop()
+	local function startTpAllLoop()
 		tpAllRunning = true
 		tpAllTask = task.spawn(function()
 			while tpAllRunning do
@@ -1444,7 +1444,7 @@ do
 						local hrp = getHRP()
 						local theirHRP = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
 						if hrp and theirHRP then
-							hrp.CFrame = theirHRP.CFrame + Vector3.new(0, 3, 0)
+							hrp.CFrame = theirHRP.CFrame
 							task.wait(0.1)
 						end
 					end
@@ -1504,7 +1504,7 @@ do
 			local row = Instance.new("Frame")
 			row.Name = "PlayerRow"
 			row.LayoutOrder = idx
-			row.Size = UDim2.new(1,0,0,60) -- Más alto para botones
+			row.Size = UDim2.new(1,0,0,60)
 			row.BackgroundColor3 = th.bg
 			row.BackgroundTransparency = 0.20
 			row.BorderSizePixel = 0
@@ -1534,7 +1534,7 @@ do
 
 			-- Nombre
 			local nameLbl = Instance.new("TextLabel")
-			nameLbl.Size = UDim2.new(1,-170,0,20)
+			nameLbl.Size = UDim2.new(1,-120,0,20)
 			nameLbl.Position = UDim2.new(0,54,0,8)
 			nameLbl.BackgroundTransparency = 1
 			nameLbl.Text = plr.DisplayName
@@ -1548,7 +1548,7 @@ do
 
 			-- Usuario
 			local userLbl = Instance.new("TextLabel")
-			userLbl.Size = UDim2.new(1,-170,0,14)
+			userLbl.Size = UDim2.new(1,-120,0,14)
 			userLbl.Position = UDim2.new(0,54,0,30)
 			userLbl.BackgroundTransparency = 1
 			userLbl.Text = "@"..plr.Name
@@ -1559,7 +1559,11 @@ do
 			userLbl.Parent = row
 			table.insert(reg.subtexts, userLbl)
 
-			-- Botón TP
+			local capturedPlr = plr
+
+			-- ============================================================
+			-- BOTÓN TP (MODIFICADO PARA INVADIR EL ESPACIO DENTRO DEL JUGADOR)
+			-- ============================================================
 			local tpBtn = Instance.new("ImageButton")
 			tpBtn.Size = UDim2.new(0, 38, 0, 38)
 			tpBtn.Position = UDim2.new(1, -48, 0.5, -19)
@@ -1583,7 +1587,7 @@ do
 			tpTip.AnchorPoint = Vector2.new(0.5,0)
 			tpTip.BackgroundColor3 = Color3.fromRGB(0,0,0)
 			tpTip.BackgroundTransparency = 0.8
-			tpTip.Text = "Teleport"
+			tpTip.Text = "Invadir (1.5s)"
 			tpTip.TextColor3 = Color3.new(1,1,1)
 			tpTip.Font = Enum.Font.Gotham
 			tpTip.TextSize = 9
@@ -1596,76 +1600,161 @@ do
 			tpBtn.MouseEnter:Connect(function() tpTip.Visible = true end)
 			tpBtn.MouseLeave:Connect(function() tpTip.Visible = false end)
 
-			local capturedPlr = plr
-			tpBtn.MouseButton1Click:Connect(function()
-				local hrp = getHRP()
-				local theirHRP = capturedPlr.Character and capturedPlr.Character:FindFirstChild("HumanoidRootPart")
-				if hrp and theirHRP then
-					hrp.CFrame = theirHRP.CFrame + Vector3.new(0, 3, 0)
-					showNotification("Teletransportado a " .. capturedPlr.DisplayName)
+			-- Variables para la invasión
+			local invasionActive = false
+			local invasionConnection = nil
+			local invasionStartTime = 0
+			local INVASION_DURATION = 1.5
+
+			local function startInvasion(targetPlr)
+				if invasionActive then 
+					invasionActive = false
+					if invasionConnection then
+						invasionConnection:Disconnect()
+						invasionConnection = nil
+					end
+					local hrp = getHRP()
+					if hrp then
+						hrp.CFrame = hrp.CFrame + Vector3.new(0, 3, 0)
+					end
+					showNotification("Invasión cancelada")
+					return
 				end
+				
+				if not targetPlr then
+					showNotification("Jugador no disponible", "warning")
+					return
+				end
+				
+				local myChar = player.Character
+				local targetChar = targetPlr.Character
+				
+				if not myChar or not targetChar then
+					showNotification("Personaje no disponible", "warning")
+					return
+				end
+				
+				local myHRP = myChar:FindFirstChild("HumanoidRootPart")
+				local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
+				
+				if not myHRP or not targetHRP then
+					showNotification("Error: partes del cuerpo no encontradas", "warning")
+					return
+				end
+				
+				invasionActive = true
+				invasionStartTime = tick()
+				
+				-- Guardar posición original
+				local originalCF = myHRP.CFrame
+				
+				-- Teletransportar DENTRO del objetivo (invadir su espacio)
+				myHRP.CFrame = targetHRP.CFrame
+				showNotification("Invadiendo a " .. targetPlr.DisplayName)
+				
+				-- Hacer noclip completo en el personaje local
+				for _, part in ipairs(myChar:GetDescendants()) do
+					if part:IsA("BasePart") then
+						part.CanCollide = false
+					end
+				end
+				
+				-- BodyVelocity para mantener la posición forzada
+				local bv = Instance.new("BodyVelocity")
+				bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+				bv.Velocity = Vector3.zero
+				bv.Parent = myHRP
+				
+				-- BodyGyro para mantener orientación
+				local bg = Instance.new("BodyGyro")
+				bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+				bg.P = 1e4
+				bg.CFrame = targetHRP.CFrame
+				bg.Parent = myHRP
+				
+				-- Conexión principal para mantener la invasión
+				invasionConnection = RunService.Heartbeat:Connect(function()
+					if not invasionActive then
+						if bv then bv:Destroy() end
+						if bg then bg:Destroy() end
+						if invasionConnection then invasionConnection:Disconnect() end
+						invasionConnection = nil
+						return
+					end
+					
+					-- Verificar tiempo
+					local elapsed = tick() - invasionStartTime
+					if elapsed >= INVASION_DURATION then
+						invasionActive = false
+						if bv then bv:Destroy() end
+						if bg then bg:Destroy() end
+						if invasionConnection then invasionConnection:Disconnect() end
+						invasionConnection = nil
+						
+						-- Restaurar posición
+						if myHRP and myHRP.Parent then
+							myHRP.CFrame = originalCF
+						end
+						showNotification("Invasión terminada")
+						return
+					end
+					
+					-- Verificar que los personajes existan
+					local currentTargetChar = targetPlr.Character
+					if not currentTargetChar then
+						invasionActive = false
+						showNotification("Jugador desconectado", "warning")
+						return
+					end
+					
+					local currentTargetHRP = currentTargetChar:FindFirstChild("HumanoidRootPart")
+					local currentMyHRP = getHRP()
+					
+					if currentTargetHRP and currentMyHRP then
+						-- FORZAR la posición DENTRO del objetivo
+						currentMyHRP.CFrame = currentTargetHRP.CFrame
+						
+						-- Actualizar BodyGyro
+						if bg then
+							bg.CFrame = currentTargetHRP.CFrame
+						end
+						
+						-- Mantener noclip
+						local char = player.Character
+						if char then
+							for _, part in ipairs(char:GetDescendants()) do
+								if part:IsA("BasePart") then
+									part.CanCollide = false
+								end
+							end
+						end
+						
+						-- También desactivar colisiones del objetivo para evitar empujones
+						local targetChar2 = targetPlr.Character
+						if targetChar2 then
+							for _, part in ipairs(targetChar2:GetDescendants()) do
+								if part:IsA("BasePart") then
+									part.CanCollide = false
+								end
+							end
+						end
+						
+					else
+						invasionActive = false
+						showNotification("Error en la invasión", "danger")
+					end
+				end)
+			end
+
+			tpBtn.MouseButton1Click:Connect(function()
+				startInvasion(capturedPlr)
 			end)
 
-			flingBtn.MouseButton1Click:Connect(function()
-    local myChar = player.Character
-    local targetChar = capturedPlr.Character
-    if not myChar or not targetChar then
-        showNotification("Personaje no disponible", "warning")
-        return
-    end
-    local myHRP = myChar:FindFirstChild("HumanoidRootPart")
-    local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
-    if not myHRP or not targetHRP then return end
-
-    -- Guardamos la posición original y nos teletransportamos al target
-    local origCF = myHRP.CFrame
-    myHRP.CFrame = targetHRP.CFrame
-
-    -- Activamos noclip para no morir
-    for _, p in ipairs(myChar:GetDescendants()) do
-        if p:IsA("BasePart") then p.CanCollide = false end
-    end
-
-    -- Duración del fling (en segundos)
-    local duration = 1.5
-    local startTime = tick()
-
-    -- Variable para controlar el loop
-    local running = true
-
-    -- Ejecutamos el fling en una corrutina
-    task.spawn(function()
-        while running and myHRP and myHRP.Parent do
-            local velo = myHRP.Velocity
-            -- Multiplicamos y añadimos fuerza vertical
-            myHRP.Velocity = velo * 10000 + Vector3.new(0, 10000, 0)
-            -- Esperamos un frame (RenderStepped)
-            RunService.RenderStepped:Wait()
-            -- Restauramos la velocidad original (esto genera el "fling")
-            myHRP.Velocity = velo
-            -- Esperamos otro frame (Stepped)
-            RunService.Stepped:Wait()
-
-            -- Si pasó el tiempo, salimos
-            if tick() - startTime > duration then
-                running = false
-                break
-            end
-        end
-
-        -- Limpieza: restaurar posición y quitar noclip
-        if myHRP and myHRP.Parent then
-            myHRP.CFrame = origCF
-        end
-        if myChar then
-            for _, p in ipairs(myChar:GetDescendants()) do
-                if p:IsA("BasePart") then p.CanCollide = true end
-            end
-        end
-    end)
-
-    showNotification("💨 Flinged " .. capturedPlr.DisplayName)
-end)
+			-- ============================================================
+			-- BOTÓN FLING ELIMINADO
+			-- (El toggle de fling está en la página de Movimiento)
+			-- ============================================================
+		end
 
 		if #allPlayers <= 1 then
 			local noPlayers = Instance.new("TextLabel")
@@ -1773,7 +1862,6 @@ end)
 	HHBFuncs.refreshPlayers = refreshPlayerList
 	refreshPlayerList()
 end
-
 --============================================================
 -- PAGINA: ESP
 --============================================================
@@ -2091,6 +2179,121 @@ do
 		local hum = getHumanoid(); if hum then hum.Health = 0 end
 	end)
 end
+-- Add this section to the Movimiento page (after the Troll section, before Reset Character)
+
+-- ============================================================
+-- SECCIÓN FLING
+-- ============================================================
+makeSectionLabel(movPage, "Fling", 18)
+
+local flingInfo = Instance.new("TextLabel")
+flingInfo.Size = UDim2.new(1,0,0,32)
+flingInfo.LayoutOrder = 17
+flingInfo.BackgroundColor3 = T().bg
+flingInfo.BackgroundTransparency = 0.15
+flingInfo.Text = "  Teletransporta a todos los jugadores\n  con un efecto de fling masivo"
+flingInfo.TextColor3 = T().subtext
+flingInfo.Font = Enum.Font.Gotham
+flingInfo.TextSize = 11
+flingInfo.TextXAlignment = Enum.TextXAlignment.Left
+flingInfo.TextWrapped = true
+flingInfo.BorderSizePixel = 0
+flingInfo.Parent = movPage
+styleCorner(flingInfo, UDim.new(0,8))
+styleStroke(flingInfo, 0.85)
+table.insert(reg.panels, flingInfo)
+table.insert(reg.subtexts, flingInfo)
+
+local pillFling, setFling, getFling = makeToggleRow(movPage, "Fling All", 18)
+
+-- Variables para el fling
+local flingRunning = false
+local flingTask = nil
+local flingConnections = {}
+
+local function startFling()
+    if flingRunning then return end
+    flingRunning = true
+    
+    flingTask = task.spawn(function()
+        while flingRunning do
+            task.wait()
+            
+            local Player1 = Players.LocalPlayer
+            local character = Player1.Character
+            local hrp = character and character:FindFirstChild("HumanoidRootPart")
+            
+            if hrp then
+                -- Guardar velocidad actual
+                local velo = hrp.Velocity
+                
+                -- Aplicar velocidad extrema (fling)
+                hrp.Velocity = velo * 10000 + Vector3.new(0, 10000, 0)
+                
+                -- Esperar un frame para que se aplique el fling
+                RunService.RenderStepped:Wait()
+                
+                -- Restaurar velocidad original para no volar permanentemente
+                hrp.Velocity = velo
+                
+                -- Pequeña pausa antes del próximo ciclo
+                RunService.Stepped:Wait()
+            end
+        end
+    end)
+end
+
+local function stopFling()
+    flingRunning = false
+    if flingTask then
+        task.cancel(flingTask)
+        flingTask = nil
+    end
+    -- Limpiar conexiones
+    for _, conn in ipairs(flingConnections) do
+        if conn then conn:Disconnect() end
+    end
+    flingConnections = {}
+    
+    -- Resetear velocidad del jugador
+    local hrp = getHRP()
+    if hrp then
+        hrp.Velocity = Vector3.zero
+    end
+end
+
+-- Configurar el toggle
+pillFling.MouseButton1Click:Connect(function()
+    local v = not getFling()
+    setFling(v)
+    if v then
+        startFling()
+        showNotification("🚀 Fling activado")
+    else
+        stopFling()
+        showNotification("Fling desactivado")
+    end
+end)
+
+-- Detener automáticamente si el personaje muere/respawnear
+player.CharacterAdded:Connect(function()
+    if getFling() then
+        -- Pequeño retraso para asegurar que el nuevo personaje exista
+        task.wait(0.5)
+        if getFling() then
+            stopFling()
+            setFling(false)
+            showNotification("Fling detenido por respawn")
+        end
+    end
+end)
+
+-- Detener si la GUI se destruye
+screenGui.AncestryChanged:Connect(function()
+    if not screenGui:IsDescendantOf(game) then
+        stopFling()
+    end
+end)
 --============================================================
 -- PAGINA: AIMBOT
 --============================================================
