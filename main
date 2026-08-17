@@ -65,7 +65,7 @@ local THEMES = {
 		knobOff   = Color3.fromRGB(80, 25, 50),
 		icon      = "rbxassetid://84155924426327",
 	},
-	OverRBX = {
+	Cat = {
 		accent    = Color3.fromRGB(180, 180, 180),
 		bg        = Color3.fromRGB(5, 5, 5),
 		text      = Color3.fromRGB(230, 230, 230),
@@ -178,7 +178,7 @@ end
 --============================================================
 -- CONFIGURACION GLOBAL
 --============================================================
-local PANEL_TRANSPARENCY = 0.6
+local PANEL_TRANSPARENCY = 0.7
 local ICON_ID            = "rbxassetid://104348663064077"
 local CLOSE_ICON_ID      = "rbxassetid://115558082558028"
 local ADD_WP_ICON_ID     = "rbxassetid://117786081881229"
@@ -322,7 +322,7 @@ local function makeToggleRow(parent, labelText, layoutOrder)
 	local row = Instance.new("Frame")
 	row.Size = UDim2.new(1,0,0,50)
 	row.BackgroundColor3 = th.bg
-	row.BackgroundTransparency = 0.22
+	row.BackgroundTransparency = 0.25
 	row.BorderSizePixel = 0
 	row.LayoutOrder = layoutOrder or 0
 	row.Parent = parent
@@ -497,12 +497,12 @@ screenGui.Name = "HappyHub"
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-screenGui.DisplayOrder = 999   -- ✅ FIX 1: por encima de todas las GUIs del juego
+screenGui.DisplayOrder = 999   
 screenGui.Parent = playerGui
 
 local panel = Instance.new("Frame")
 panel.Name = "MainPanel"
-panel.Size = UDim2.new(0.6, 0, 0.9, 0)
+panel.Size = UDim2.new(0.6, 0, 0.4, 0)
 panel.Position = UDim2.new(0.5, 0, 0.5, 0)
 panel.BackgroundColor3 = T().bg
 panel.BackgroundTransparency = 0.6
@@ -570,7 +570,7 @@ local authorLabel = Instance.new("TextLabel")
 authorLabel.Size = UDim2.new(1, -110, 0, 14)
 authorLabel.Position = UDim2.new(0, 52, 0, 36)
 authorLabel.BackgroundTransparency = 1
-authorLabel.Text = "By Replicated Man • Github"
+authorLabel.Text = "By @replicatedman · Keyless · MM2 Proyect"
 authorLabel.TextColor3 = T().subtext
 authorLabel.TextXAlignment = Enum.TextXAlignment.Left
 authorLabel.TextSize = 10
@@ -590,15 +590,20 @@ minimizeBtn.AutoButtonColor = false
 minimizeBtn.Parent = header
 
 local isMinimized = false
-local OPEN_SIZE = UDim2.new(0.6, 0, 0.9, 0)
+local OPEN_SIZE = UDim2.new(0.6, 0, 0.4, 0)
 local CLOSED_SIZE = UDim2.new(0.4, 0, 0, 58)
+local originalTransparency = panel.BackgroundTransparency  -- guardamos 0.6
+
 minimizeBtn.MouseButton1Click:Connect(function()
-	isMinimized = not isMinimized
-	if isMinimized then
-		TweenService:Create(panel, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = CLOSED_SIZE}):Play()
-	else
-		TweenService:Create(panel, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = OPEN_SIZE}):Play()
-	end
+    isMinimized = not isMinimized
+    local targetTransparency = isMinimized and 1 or originalTransparency
+    local targetSize = isMinimized and CLOSED_SIZE or OPEN_SIZE
+    local tweenInfo = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
+    -- Animación de tamaño
+    TweenService:Create(panel, tweenInfo, {Size = targetSize}):Play()
+    -- Animación de transparencia (desvanecimiento)
+    TweenService:Create(panel, tweenInfo, {BackgroundTransparency = targetTransparency}):Play()
 end)
 
 -- DRAG
@@ -650,7 +655,7 @@ sidebarLayout.Padding = UDim.new(0,6)
 sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
 sidebarLayout.Parent = sidebar
 
-local tabDefs = {"Home","Waypoints","Jugadores","ESP","Movimiento","Aimbot","Avatar","Scripts","Misc","Settings",}
+local tabDefs = {"Home","Waypoints","Players","ESP","Movement","Aimbot","Avatar","Scripts","Misc","Settings",}
 local tabBtns = {}
 for i, name in ipairs(tabDefs) do
 	local btn = Instance.new("TextButton")
@@ -1417,7 +1422,7 @@ end
 --============================================================
 -- PAGINA: JUGADORES (CON TP + FOLLOW DENTRO DEL PLAYER)
 --============================================================
-local jugadoresPage = newPage("Jugadores")
+local jugadoresPage = newPage("Players")
 do
 	local layout = Instance.new("UIListLayout")
 	layout.Padding = UDim.new(0,8)
@@ -1909,9 +1914,9 @@ do
 	end)
 end
 --============================================================
--- PAGINA: MOVIMIENTO (CON FLY INTEGRADO - CORREGIDA)
+-- PAGINA: MOVIMIENTO (CON FLY, SPEED, MODS, ANIMATIONS, RESET Y FLING)
 --============================================================
-local movPage = newPage("Movimiento")
+local movPage = newPage("Movement")
 do
 	local layout = Instance.new("UIListLayout")
 	layout.Padding = UDim.new(0,8)
@@ -1920,7 +1925,7 @@ do
 	stylePadding(movPage, 0,8,0,4)
 
 	-- ============================================================
-	-- SECCIÓN FLY (ARRIBA DEL TODO)
+	-- SECCIÓN FLY
 	-- ============================================================
 	makeSectionLabel(movPage, "Fly", 1)
 	local pillFly, setFly, getFly = makeToggleRow(movPage, "Active Fly", 2)
@@ -1989,7 +1994,6 @@ do
 		local hum = getHumanoid(); if hum then hum.PlatformStand = false end
 	end
 
-	-- Exponer para HHBFuncs
 	HHBFuncs.startFly = startFly
 	HHBFuncs.stopFly = stopFly
 
@@ -2121,179 +2125,195 @@ do
 	end)
 
 	-- ============================================================
-	-- SECCIÓN TROLL
+	-- SECCIÓN ANIMATIONS OR DANCES (reemplaza el antiguo Troll)
 	-- ============================================================
-	makeSectionLabel(movPage, "Troll", 14)
-	local laughBtn = Instance.new("TextButton")
-	laughBtn.LayoutOrder = 15
-	laughBtn.Size = UDim2.new(1,0,0,50)
-	laughBtn.BackgroundColor3 = T().bg
-	laughBtn.BackgroundTransparency = 0.22
-	laughBtn.Text = "/e laugh"
-	laughBtn.TextColor3 = T().accent
-	laughBtn.TextSize = 15
-	laughBtn.Font = Enum.Font.GothamSemibold
-	laughBtn.BorderSizePixel = 0
-	laughBtn.AutoButtonColor = true
-	laughBtn.Parent = movPage
-	styleCorner(laughBtn, UDim.new(0,10))
-	local laughStroke = styleStroke(laughBtn, 0.82, T().accent)
-	table.insert(reg.panels, laughBtn)
-	table.insert(reg.accentTexts, laughBtn)
-	table.insert(reg.accentStrokes, laughStroke)
+	makeSectionLabel(movPage, "Animations or dances", 14)
 
-	laughBtn.MouseButton1Click:Connect(function()
-		local char = player.Character
+	local animTracks = {
+		hide = nil,
+		fake = nil,
+		take = nil,
+	}
+
+	local function playAnimById(animId)
 		local hum = getHumanoid()
-		if not char or not hum then return end
-		pcall(function()
-			local rs = game:GetService("ReplicatedStorage")
-			local evt = rs:FindFirstChild("DefaultChatSystemChatEvents")
-			if evt then
-				local req = evt:FindFirstChild("SayMessageRequest")
-				if req then req:FireServer("/e laugh", "All") end
+		if not hum then return nil end
+		local anim = Instance.new("Animation")
+		anim.AnimationId = "rbxassetid://" .. animId
+		local track = hum:LoadAnimation(anim)
+		track:Play()
+		game:GetService("Debris"):AddItem(anim, 5)
+		return track
+	end
+
+	-- Toggle 1: Hide me
+	local pillHide, setHide, getHide = makeToggleRow(movPage, "Hide me", 15)
+	pillHide.MouseButton1Click:Connect(function()
+		local v = not getHide()
+		setHide(v)
+		if v then
+			if animTracks.hide then animTracks.hide:Stop() end
+			animTracks.hide = playAnimById("94292601332790")
+		else
+			if animTracks.hide then
+				animTracks.hide:Stop()
+				animTracks.hide = nil
 			end
-		end)
-		pcall(function()
-			local animScript = char:FindFirstChild("Animate")
-			if animScript then
-				local playEmote = animScript:FindFirstChild("PlayEmote")
-				if playEmote then playEmote:Fire("laugh") end
+		end
+	end)
+
+	-- Toggle 2: Fake dead mm2
+	local pillFake, setFake, getFake = makeToggleRow(movPage, "Fake dead mm2", 16)
+	pillFake.MouseButton1Click:Connect(function()
+		local v = not getFake()
+		setFake(v)
+		if v then
+			if animTracks.fake then animTracks.fake:Stop() end
+			animTracks.fake = playAnimById("133176230287726")
+		else
+			if animTracks.fake then
+				animTracks.fake:Stop()
+				animTracks.fake = nil
 			end
-		end)
-		pcall(function()
-			local anim = Instance.new("Animation")
-			anim.AnimationId = "rbxassetid://3576686446"
-			local track = hum:LoadAnimation(anim)
-			track:Play()
-			game:GetService("Debris"):AddItem(anim, 5)
-		end)
+		end
+	end)
+
+	-- Toggle 3: Take the L
+	local pillTake, setTake, getTake = makeToggleRow(movPage, "Take the L", 17)
+	pillTake.MouseButton1Click:Connect(function()
+		local v = not getTake()
+		setTake(v)
+		if v then
+			if animTracks.take then animTracks.take:Stop() end
+			animTracks.take = playAnimById("86830387246209")
+		else
+			if animTracks.take then
+				animTracks.take:Stop()
+				animTracks.take = nil
+			end
+		end
+	end)
+
+	-- Reactivar animaciones al respawn
+	player.CharacterAdded:Connect(function()
+		task.wait(0.5)
+		if getHide() then
+			if animTracks.hide then animTracks.hide:Stop() end
+			animTracks.hide = playAnimById("94292601332790")
+		end
+		if getFake() then
+			if animTracks.fake then animTracks.fake:Stop() end
+			animTracks.fake = playAnimById("133176230287726")
+		end
+		if getTake() then
+			if animTracks.take then animTracks.take:Stop() end
+			animTracks.take = playAnimById("86830387246209")
+		end
 	end)
 
 	-- ============================================================
-	-- SECCIÓN RESET
+	-- SECCIÓN RESET CHARACTER
 	-- ============================================================
-	makeSectionLabel(movPage, "Reset Character", 16)
-	local resetBtn = makeDangerBtn(movPage, "Autokill", 17)
+	makeSectionLabel(movPage, "Reset Character", 18)
+	local resetBtn = makeDangerBtn(movPage, "Autokill", 19)
 	resetBtn.MouseButton1Click:Connect(function()
-		local hum = getHumanoid(); if hum then hum.Health = 0 end
+		local hum = getHumanoid()
+		if hum then hum.Health = 0 end
 	end)
-end
--- Add this section to the Movimiento page (after the Troll section, before Reset Character)
 
--- ============================================================
--- SECCIÓN FLING
--- ============================================================
-makeSectionLabel(movPage, "Fling", 18)
+	-- ============================================================
+	-- SECCIÓN FLING (ubicada al final, orden correcto)
+	-- ============================================================
+	makeSectionLabel(movPage, "Fling", 20)
 
-local flingInfo = Instance.new("TextLabel")
-flingInfo.Size = UDim2.new(1,0,0,32)
-flingInfo.LayoutOrder = 17
-flingInfo.BackgroundColor3 = T().bg
-flingInfo.BackgroundTransparency = 0.15
-flingInfo.Text = "  Teletransporta a todos los jugadores\n  con un efecto de fling masivo"
-flingInfo.TextColor3 = T().subtext
-flingInfo.Font = Enum.Font.Gotham
-flingInfo.TextSize = 11
-flingInfo.TextXAlignment = Enum.TextXAlignment.Left
-flingInfo.TextWrapped = true
-flingInfo.BorderSizePixel = 0
-flingInfo.Parent = movPage
-styleCorner(flingInfo, UDim.new(0,8))
-styleStroke(flingInfo, 0.85)
-table.insert(reg.panels, flingInfo)
-table.insert(reg.subtexts, flingInfo)
+	local flingInfo = Instance.new("TextLabel")
+	flingInfo.Size = UDim2.new(1,0,0,32)
+	flingInfo.LayoutOrder = 21
+	flingInfo.BackgroundColor3 = T().bg
+	flingInfo.BackgroundTransparency = 0.15
+	flingInfo.Text = "  · Teleports all players\n  with a mass-launch effect."
+	flingInfo.TextColor3 = T().subtext
+	flingInfo.Font = Enum.Font.Gotham
+	flingInfo.TextSize = 11
+	flingInfo.TextXAlignment = Enum.TextXAlignment.Left
+	flingInfo.TextWrapped = true
+	flingInfo.BorderSizePixel = 0
+	flingInfo.Parent = movPage
+	styleCorner(flingInfo, UDim.new(0,8))
+	styleStroke(flingInfo, 0.85)
+	table.insert(reg.panels, flingInfo)
+	table.insert(reg.subtexts, flingInfo)
 
-local pillFling, setFling, getFling = makeToggleRow(movPage, "Fling All", 18)
+	local pillFling, setFling, getFling = makeToggleRow(movPage, "Fling All", 22)
 
--- Variables para el fling
-local flingRunning = false
-local flingTask = nil
-local flingConnections = {}
+	local flingRunning = false
+	local flingTask = nil
+	local flingConnections = {}
 
-local function startFling()
-    if flingRunning then return end
-    flingRunning = true
-    
-    flingTask = task.spawn(function()
-        while flingRunning do
-            task.wait()
-            
-            local Player1 = Players.LocalPlayer
-            local character = Player1.Character
-            local hrp = character and character:FindFirstChild("HumanoidRootPart")
-            
-            if hrp then
-                -- Guardar velocidad actual
-                local velo = hrp.Velocity
-                
-                -- Aplicar velocidad extrema (fling)
-                hrp.Velocity = velo * 10000 + Vector3.new(0, 10000, 0)
-                
-                -- Esperar un frame para que se aplique el fling
-                RunService.RenderStepped:Wait()
-                
-                -- Restaurar velocidad original para no volar permanentemente
-                hrp.Velocity = velo
-                
-                -- Pequeña pausa antes del próximo ciclo
-                RunService.Stepped:Wait()
-            end
-        end
-    end)
-end
+	local function startFling()
+		if flingRunning then return end
+		flingRunning = true
+		
+		flingTask = task.spawn(function()
+			while flingRunning do
+				task.wait()
+				local character = player.Character
+				local hrp = character and character:FindFirstChild("HumanoidRootPart")
+				if hrp then
+					local velo = hrp.Velocity
+					hrp.Velocity = velo * 10000 + Vector3.new(0, 10000, 0)
+					RunService.RenderStepped:Wait()
+					hrp.Velocity = velo
+					RunService.Stepped:Wait()
+				end
+			end
+		end)
+	end
 
-local function stopFling()
-    flingRunning = false
-    if flingTask then
-        task.cancel(flingTask)
-        flingTask = nil
-    end
-    -- Limpiar conexiones
-    for _, conn in ipairs(flingConnections) do
-        if conn then conn:Disconnect() end
-    end
-    flingConnections = {}
-    
-    -- Resetear velocidad del jugador
-    local hrp = getHRP()
-    if hrp then
-        hrp.Velocity = Vector3.zero
-    end
-end
+	local function stopFling()
+		flingRunning = false
+		if flingTask then
+			task.cancel(flingTask)
+			flingTask = nil
+		end
+		for _, conn in ipairs(flingConnections) do
+			if conn then conn:Disconnect() end
+		end
+		flingConnections = {}
+		local hrp = getHRP()
+		if hrp then hrp.Velocity = Vector3.zero end
+	end
 
--- Configurar el toggle
-pillFling.MouseButton1Click:Connect(function()
-    local v = not getFling()
-    setFling(v)
-    if v then
-        startFling()
-        showNotification("🚀 Fling activado")
-    else
-        stopFling()
-        showNotification("Fling desactivado")
-    end
-end)
+	pillFling.MouseButton1Click:Connect(function()
+		local v = not getFling()
+		setFling(v)
+		if v then
+			startFling()
+			showNotification("🚀 Fling activado")
+		else
+			stopFling()
+			showNotification("Fling desactivado")
+		end
+	end)
 
--- Detener automáticamente si el personaje muere/respawnear
-player.CharacterAdded:Connect(function()
-    if getFling() then
-        -- Pequeño retraso para asegurar que el nuevo personaje exista
-        task.wait(0.5)
-        if getFling() then
-            stopFling()
-            setFling(false)
-            showNotification("Fling detenido por respawn")
-        end
-    end
-end)
+	player.CharacterAdded:Connect(function()
+		if getFling() then
+			task.wait(0.5)
+			if getFling() then
+				stopFling()
+				setFling(false)
+				showNotification("Fling detenido por respawn")
+			end
+		end
+	end)
 
--- Detener si la GUI se destruye
-screenGui.AncestryChanged:Connect(function()
-    if not screenGui:IsDescendantOf(game) then
-        stopFling()
-    end
-end)
+	screenGui.AncestryChanged:Connect(function()
+		if not screenGui:IsDescendantOf(game) then
+			stopFling()
+		end
+	end)
+
+end 
 --============================================================
 -- PAGINA: AIMBOT
 --============================================================
@@ -3266,7 +3286,7 @@ do
 		{ name="Red",       col=Color3.fromRGB(230,50,50),      row=swatchRow1 },
 		{ name="White",     col=Color3.fromRGB(210,210,210),    row=swatchRow1 },
 		{ name="Valentine", col=Color3.fromRGB(255,105,155),    row=swatchRow2 },
-		{ name="OverRBX",   col=Color3.fromRGB(30,30,30),       row=swatchRow2 },
+		{ name="Cat",   col=Color3.fromRGB(30,30,30),       row=swatchRow2 },
 	}
 
 	local swatchData = {}
@@ -3315,7 +3335,7 @@ do
 			applyTheme()
 			switchTab(activeTabName)
 			-- ✅ MEJORA 7: notificación al cambiar tema
-			showNotification("Tema: " .. def.name)
+			showNotification("Theme: " .. def.name)
 		end)
 	end
 
@@ -3428,7 +3448,7 @@ do
 	end)
 
 	makeSectionLabel(settingsPage, "Warn zone", 8)
-	local deleteGuiBtn = makeDangerBtn(settingsPage, "Eliminar Gui", 9)
+	local deleteGuiBtn = makeDangerBtn(settingsPage, "Delete UI", 9)
 	deleteGuiBtn.MouseButton1Click:Connect(function()
 		-- ✅ FIX 2: usar HHBFuncs para acceder a funciones de otros bloques
 		pcall(HHBFuncs.stopFly)
