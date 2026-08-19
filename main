@@ -79,7 +79,7 @@ local THEMES = {
 local currentThemeName = "Dark"
 local function T() return THEMES[currentThemeName] end
 
--- ✅ FIX 4: bgTexts agregado al registro para textos con color = th.bg
+-- ✅ FIX 4: Bro if you are reading this are you a loser
 local reg = {
 	panels        = {},
 	texts         = {},
@@ -103,7 +103,7 @@ local customIconOverride = nil
 local execTabBtnRefs = {}
 local activeExecTabIdx = 1
 
--- ✅ FIX 2: tabla global de funciones para resolver problemas de scope
+-- ✅ FIX 2: I just inprove my script with IA sometimes, be grateful you have my code, or I'll consider you a piece of trash.
 local HHBFuncs = {}
 
 local function applyTheme()
@@ -175,9 +175,7 @@ local function applyTheme()
 	if HHBFuncs.refreshPlayers   then HHBFuncs.refreshPlayers()   end
 end
 
---============================================================
--- CONFIGURACION GLOBAL
---============================================================
+---------|| Global config ||----------
 local PANEL_TRANSPARENCY = 0.7
 local ICON_ID            = "rbxassetid://104348663064077"
 local CLOSE_ICON_ID      = "rbxassetid://115558082558028"
@@ -199,9 +197,9 @@ local Maps_mm2 = {
     "Workplace", "PoliceStation", "Office3","Hospital3"
 }
 
---============================================================
--- HELPERS
---============================================================
+
+-------------||  Helpers ||----------------
+
 local function getHRP()
 	local c = player.Character
 	return c and c:FindFirstChild("HumanoidRootPart")
@@ -288,9 +286,7 @@ local function obtainSheriffGun()
     return false
 end
 
---============================================================
--- ESTILOS REUTILIZABLES
---============================================================
+-------------||  reutilizable styles ||----------------
 local function styleCorner(obj, radius)
 	local c = Instance.new("UICorner")
 	c.CornerRadius = radius or UDim.new(0, 10)
@@ -314,9 +310,7 @@ local function stylePadding(obj, top, bot, left, right)
 end
 local twI = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
---============================================================
--- TOGGLE ROW
---============================================================
+-------------||  toggle row ||----------------
 local function makeToggleRow(parent, labelText, layoutOrder)
 	local th = T()
 	local row = Instance.new("Frame")
@@ -373,9 +367,7 @@ local function makeToggleRow(parent, labelText, layoutOrder)
 	return pill, setState, getState
 end
 
---============================================================
--- SLIDER ROW
---============================================================
+-------------||  slider row ||----------------
 local function makeSliderRow(parent, labelText, minVal, maxVal, defVal, onChange, layoutOrder)
 	local th = T()
 	local row = Instance.new("Frame")
@@ -489,9 +481,7 @@ local function makeSliderRow(parent, labelText, minVal, maxVal, defVal, onChange
 	return row, function() return cur end
 end
 
---============================================================
--- GUI PRINCIPAL (MINIMIZABLE Y ARRASTRABLE)
---============================================================
+-------------||  Principal Gui  ||----------------
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "HappyHub"
 screenGui.ResetOnSpawn = false
@@ -525,7 +515,7 @@ shadow.ZIndex = panel.ZIndex - 1
 shadow.Parent = panel
 styleCorner(shadow, UDim.new(0, 22))
 
--- HEADER
+-------------||  header ||----------------
 local header = Instance.new("Frame")
 header.Size = UDim2.new(1, 0, 0, 58)
 header.BackgroundColor3 = T().bg
@@ -629,9 +619,7 @@ UserInputService.InputChanged:Connect(function(input)
 	end
 end)
 
---============================================================
--- SIDEBAR Y PAGINAS
---============================================================
+-------------||  side bar and pages ||----------------
 local sidebar = Instance.new("ScrollingFrame")
 sidebar.Size = UDim2.new(0, 138, 1, -130)
 sidebar.Position = UDim2.new(0, 8, 0, 62)
@@ -696,7 +684,7 @@ contentArea.BackgroundTransparency = 1
 contentArea.BorderSizePixel = 0
 contentArea.Parent = panel
 
--- PLAYER INFO PANEL (bottom-left)
+
 local playerInfoPanel = Instance.new("Frame")
 playerInfoPanel.Size = UDim2.new(0, 138, 0, 58)
 playerInfoPanel.Position = UDim2.new(0, 8, 1, -68)
@@ -791,9 +779,7 @@ for _, name in ipairs(tabDefs) do
 	tabBtns[name].MouseButton1Click:Connect(function() switchTab(name) end)
 end
 
---============================================================
--- FUNCIONES AUXILIARES DE UI
---============================================================
+-------------||  Aux functions ||----------------
 local function makeSectionLabel(parent, text, lo)
 	local lbl = Instance.new("TextLabel")
 	lbl.Size = UDim2.new(1,0,0,24)
@@ -865,9 +851,7 @@ local function makeInfoCard(parent, text, lo)
 	return f
 end
 
---============================================================
--- ALMACENES DE ESTADOS
---============================================================
+-------------||  Data storage ||----------------
 espStates = {
 	getPL = nil, setPL = nil,
 	getMM2 = nil, setMM2 = nil,
@@ -895,9 +879,7 @@ local antiFlingLastPos = nil
 local ANTI_FLING_MAX_VEL = 350
 local ANTI_FLING_MAX_DELTA = 80
 
---============================================================
--- PAGINA: HOME (VERSIÓN LIMPIA SIN EMOJIS)
---============================================================
+-------------|| Home page [1] ||----------------
 local homePage = newPage("Home")
 do
 	local layout = Instance.new("UIListLayout")
@@ -906,7 +888,7 @@ do
 	layout.Parent = homePage
 	stylePadding(homePage, 4,8,0,4)
 
-	-- ===== HEADER CARD =====
+	
 	local headerCard = Instance.new("Frame")
 	headerCard.LayoutOrder = 1
 	headerCard.Size = UDim2.new(1,0,0,80)
@@ -951,7 +933,7 @@ do
 	hubSubLbl.Parent = headerCard
 	table.insert(reg.subtexts, hubSubLbl)
 
-	-- ===== SECCION: MUSICA =====
+	
 	makeSectionLabel(homePage, "Music", 2)
 
 	local pillMusic, setMusic, getMusic = makeToggleRow(homePage, "HR - WASSA", 3)
@@ -1009,7 +991,7 @@ do
 		end
 	end)
 
-	-- ===== SECCION: CREADORES =====
+	
 	makeSectionLabel(homePage, "Creators", 4)
 
 	local function makeOwnerCard(parent, username, role, lo)
@@ -1104,7 +1086,7 @@ do
 	makeOwnerCard(homePage, "OverthaneRBX ", "Developer · Hub Creator", 5)
 	makeOwnerCard(homePage, "ReplicatedBacon_0", "Co-Owner · Test & Scripts", 6)
 
-	-- ===== SECCION: CARACTERISTICAS =====
+	
 	makeSectionLabel(homePage, "Features", 7)
 
 	local function makeFeatureRow(parent, title, desc, lo)
@@ -1159,9 +1141,6 @@ do
 	makeFeatureRow(homePage, "Settings", "7 themes (2 exclusive) · Fullbright · Hide GUI", 17)
 end
 
--- ============================================================
--- FUNCIONES AUXILIARES (compartidas entre Waypoints y Misc)
--- ============================================================
 local function findGunDropCFrame()
     local gWorkspace = game:GetService("Workspace")
     for _, map in ipairs(gWorkspace:GetChildren()) do
@@ -1222,9 +1201,7 @@ local function obtainSheriffGun()
     return false
 end
 
---============================================================
--- PAGINA: WAYPOINTS
---============================================================
+-------------||  Page waypoints [2] ||----------------
 local wpPage = newPage("Waypoints")
 do
 	local layout = Instance.new("UIListLayout")
@@ -1250,7 +1227,7 @@ do
 	nameBox.BackgroundColor3 = T().bg
 	nameBox.BackgroundTransparency = 0.15
 	nameBox.TextColor3 = T().text
-	nameBox.PlaceholderText = "Nombre del waypoint..."
+	nameBox.PlaceholderText = "waypoint name"
    nameBox.Text = "   "
 	nameBox.PlaceholderColor3 = T().subtext
 	nameBox.TextSize = 14
@@ -1307,7 +1284,7 @@ do
 	emptyLbl.Name = "EmptyLabel"
 	emptyLbl.Size = UDim2.new(1,0,0,44)
 	emptyLbl.BackgroundTransparency = 1
-	emptyLbl.Text = "Aun no hay waypoints guardados."
+	emptyLbl.Text = "There are no saved waypoints yet."
 	emptyLbl.TextColor3 = T().subtext
 	emptyLbl.Font = Enum.Font.Gotham
 	emptyLbl.TextSize = 13
@@ -1360,7 +1337,7 @@ do
 			tp.Position = UDim2.new(1,-138,0.5,-17)
 			tp.BackgroundColor3 = th.bg
 			tp.BackgroundTransparency = 0.05
-			tp.Text = "📌"
+			tp.Text = "·"
 			tp.TextColor3 = th.accent
 			tp.TextSize = 13
 			tp.Font = Enum.Font.GothamBold
@@ -1378,7 +1355,7 @@ do
 			del.Position = UDim2.new(1,-68,0.5,-17)
 			del.BackgroundColor3 = th.bg
 			del.BackgroundTransparency = 0.05
-			del.Text = "❌"
+			del.Text = "x"
 			del.TextColor3 = th.danger
 			del.TextSize = 13
 			del.Font = Enum.Font.GothamBold
@@ -1419,9 +1396,7 @@ do
 	_G.__HHB_refreshList = refreshList
 	refreshList()
 end
---============================================================
--- PAGINA: JUGADORES (CON TP + FOLLOW DENTRO DEL PLAYER)
---============================================================
+----|| Page players idk number ||---
 local jugadoresPage = newPage("Players")
 do
 	local layout = Instance.new("UIListLayout")
@@ -1432,9 +1407,7 @@ do
 
 	makeSectionLabel(jugadoresPage, "Teleport to any player", 1)
 
-	-- ============================================================
-	-- TOGGLE TP ALL (Loop)
-	-- ============================================================
+	--|| With this you can make Kill everyone ||--
 	local tpAllPill, setTpAll, getTpAll = makeToggleRow(jugadoresPage, "TP All (Loop)", 2)
 	local tpAllRunning = false
 	local tpAllTask = nil
@@ -1479,9 +1452,7 @@ do
 		end
 	end)
 
-	-- ============================================================
-	-- LISTA DE JUGADORES
-	-- ============================================================
+	----|| Player list ||---
 	local playerListContainer = Instance.new("Frame")
 	playerListContainer.Name = "PlayerListContainer"
 	playerListContainer.LayoutOrder = 3
@@ -1495,9 +1466,7 @@ do
 	plListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	plListLayout.Parent = playerListContainer
 
-	-- ============================================================
-	-- REFRESCAR LISTA DE JUGADORES
-	-- ============================================================
+	----|| Refresh list ||---
 	local function refreshPlayerList()
 		for _, ch in ipairs(playerListContainer:GetChildren()) do
 			if ch:IsA("Frame") then ch:Destroy() end
@@ -1518,7 +1487,7 @@ do
 			styleStroke(row, 0.88)
 			table.insert(reg.panels, row)
 
-			-- Avatar circular
+			-- Avatar
 			local avatarCircle = Instance.new("Frame")
 			avatarCircle.Size = UDim2.new(0,36,0,36)
 			avatarCircle.Position = UDim2.new(0,10,0.5,-18)
@@ -1537,7 +1506,7 @@ do
 			avatarLetter.Parent = avatarCircle
 			table.insert(reg.accentTexts, avatarLetter)
 
-			-- Nombre
+			-- name
 			local nameLbl = Instance.new("TextLabel")
 			nameLbl.Size = UDim2.new(1,-120,0,20)
 			nameLbl.Position = UDim2.new(0,54,0,8)
@@ -1551,7 +1520,7 @@ do
 			nameLbl.Parent = row
 			table.insert(reg.texts, nameLbl)
 
-			-- Usuario
+			-- user
 			local userLbl = Instance.new("TextLabel")
 			userLbl.Size = UDim2.new(1,-120,0,14)
 			userLbl.Position = UDim2.new(0,54,0,30)
@@ -1566,9 +1535,7 @@ do
 
 			local capturedPlr = plr
 
-			-- ============================================================
-			-- BOTÓN TP (MODIFICADO PARA INVADIR EL ESPACIO DENTRO DEL JUGADOR)
-			-- ============================================================
+			----|| Teleport button [modify if you want ] ||---
 			local tpBtn = Instance.new("ImageButton")
 			tpBtn.Size = UDim2.new(0, 38, 0, 38)
 			tpBtn.Position = UDim2.new(1, -48, 0.5, -19)
@@ -1605,7 +1572,7 @@ do
 			tpBtn.MouseEnter:Connect(function() tpTip.Visible = true end)
 			tpBtn.MouseLeave:Connect(function() tpTip.Visible = false end)
 
-			-- Variables para la invasión
+			
 			local invasionActive = false
 			local invasionConnection = nil
 			local invasionStartTime = 0
@@ -1650,34 +1617,34 @@ do
 				invasionActive = true
 				invasionStartTime = tick()
 				
-				-- Guardar posición original
+				
 				local originalCF = myHRP.CFrame
 				
-				-- Teletransportar DENTRO del objetivo (invadir su espacio)
+				
 				myHRP.CFrame = targetHRP.CFrame
 				showNotification("Invadiendo a " .. targetPlr.DisplayName)
 				
-				-- Hacer noclip completo en el personaje local
+				
 				for _, part in ipairs(myChar:GetDescendants()) do
 					if part:IsA("BasePart") then
 						part.CanCollide = false
 					end
 				end
 				
-				-- BodyVelocity para mantener la posición forzada
+				
 				local bv = Instance.new("BodyVelocity")
 				bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
 				bv.Velocity = Vector3.zero
 				bv.Parent = myHRP
 				
-				-- BodyGyro para mantener orientación
+				
 				local bg = Instance.new("BodyGyro")
 				bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
 				bg.P = 1e4
 				bg.CFrame = targetHRP.CFrame
 				bg.Parent = myHRP
 				
-				-- Conexión principal para mantener la invasión
+		
 				invasionConnection = RunService.Heartbeat:Connect(function()
 					if not invasionActive then
 						if bv then bv:Destroy() end
@@ -1687,7 +1654,7 @@ do
 						return
 					end
 					
-					-- Verificar tiempo
+					
 					local elapsed = tick() - invasionStartTime
 					if elapsed >= INVASION_DURATION then
 						invasionActive = false
@@ -1696,7 +1663,7 @@ do
 						if invasionConnection then invasionConnection:Disconnect() end
 						invasionConnection = nil
 						
-						-- Restaurar posición
+						
 						if myHRP and myHRP.Parent then
 							myHRP.CFrame = originalCF
 						end
@@ -1704,7 +1671,7 @@ do
 						return
 					end
 					
-					-- Verificar que los personajes existan
+					
 					local currentTargetChar = targetPlr.Character
 					if not currentTargetChar then
 						invasionActive = false
@@ -1755,10 +1722,6 @@ do
 				startInvasion(capturedPlr)
 			end)
 
-			-- ============================================================
-			-- BOTÓN FLING ELIMINADO
-			-- (El toggle de fling está en la página de Movimiento)
-			-- ============================================================
 		end
 
 		if #allPlayers <= 1 then
@@ -1774,9 +1737,7 @@ do
 		end
 	end
 
-	-- ============================================================
-	-- BOTÓN ACTUALIZAR LISTA
-	-- ============================================================
+
 	local refreshBtn = Instance.new("TextButton")
 	refreshBtn.LayoutOrder = 4
 	refreshBtn.Size = UDim2.new(1,0,0,42)
@@ -1799,9 +1760,7 @@ do
 	Players.PlayerAdded:Connect(function() task.wait(1); refreshPlayerList() end)
 	Players.PlayerRemoving:Connect(function() task.wait(0.1); refreshPlayerList() end)
 
-	-- ============================================================
-	-- SECCIÓN SERVER
-	-- ============================================================
+	
 	makeSectionLabel(jugadoresPage, "Server", 5)
 
 	local rejoinBtn = Instance.new("TextButton")
@@ -1867,9 +1826,7 @@ do
 	HHBFuncs.refreshPlayers = refreshPlayerList
 	refreshPlayerList()
 end
---============================================================
--- PAGINA: ESP
---============================================================
+----|| Esp page ||---
 local espPage = newPage("ESP")
 do
 	local layout = Instance.new("UIListLayout")
@@ -1913,9 +1870,7 @@ do
 		if getPL() then pcall(disableESP_PL); pcall(enableESP_PL) end
 	end)
 end
---============================================================
--- PAGINA: MOVIMIENTO (CON FLY, SPEED, MODS, ANIMATIONS, RESET Y FLING)
---============================================================
+----|| Movement ||---
 local movPage = newPage("Movement")
 do
 	local layout = Instance.new("UIListLayout")
@@ -1924,9 +1879,7 @@ do
 	layout.Parent = movPage
 	stylePadding(movPage, 0,8,0,4)
 
-	-- ============================================================
-	-- SECCIÓN FLY
-	-- ============================================================
+	
 	makeSectionLabel(movPage, "Fly", 1)
 	local pillFly, setFly, getFly = makeToggleRow(movPage, "Active Fly", 2)
 	local currentFlySpeed = DEFAULT_FLYSPEED
@@ -2005,9 +1958,7 @@ do
 		if getFly() then setFly(false); stopFly() end
 	end)
 
-	-- ============================================================
-	-- SECCIÓN SPEED
-	-- ============================================================
+	
 	makeSectionLabel(movPage, "Speed", 5)
 	local currentWalkSpeed = DEFAULT_WALKSPEED
 	local currentJumpPower = DEFAULT_JUMPPOWER
@@ -2025,9 +1976,7 @@ do
 		if hum then hum.WalkSpeed = currentWalkSpeed; hum.JumpPower = currentJumpPower end
 	end)
 
-	-- ============================================================
-	-- SECCIÓN MODIFICACIONES
-	-- ============================================================
+	
 	makeSectionLabel(movPage, "Modifications or mods", 8)
 
 	local pillNoclip, setNoclip, getNoclip = makeToggleRow(movPage, "Noclip", 9)
@@ -2124,9 +2073,7 @@ do
 		end
 	end)
 
-	-- ============================================================
-	-- SECCIÓN ANIMATIONS OR DANCES (reemplaza el antiguo Troll)
-	-- ============================================================
+	
 	makeSectionLabel(movPage, "Animations or dances", 14)
 
 	local animTracks = {
@@ -2211,9 +2158,7 @@ do
 		end
 	end)
 
-	-- ============================================================
-	-- SECCIÓN RESET CHARACTER
-	-- ============================================================
+
 	makeSectionLabel(movPage, "Reset Character", 18)
 	local resetBtn = makeDangerBtn(movPage, "Autokill", 19)
 	resetBtn.MouseButton1Click:Connect(function()
@@ -2221,9 +2166,7 @@ do
 		if hum then hum.Health = 0 end
 	end)
 
-	-- ============================================================
-	-- SECCIÓN FLING (ubicada al final, orden correcto)
-	-- ============================================================
+	
 	makeSectionLabel(movPage, "Fling", 20)
 
 	local flingInfo = Instance.new("TextLabel")
@@ -2289,7 +2232,7 @@ do
 		setFling(v)
 		if v then
 			startFling()
-			showNotification("🚀 Fling activado")
+			showNotification(" Fling activado")
 		else
 			stopFling()
 			showNotification("Fling desactivado")
@@ -2314,9 +2257,7 @@ do
 	end)
 
 end 
---============================================================
--- PAGINA: AIMBOT
---============================================================
+----|| Page aimbot... ||---
 local aimbotPage = newPage("Aimbot")
 do
 	local layout = Instance.new("UIListLayout")
@@ -2374,7 +2315,7 @@ do
 		"• Lock-On Asesino: You justo can use in MM2.\n• Aimbot general is for any player",
 		10)
 
-	-- ✅ FIX 3: NO re-declarar mm2Conn/generalConn aquí (usan las del scope externo)
+
 	local function getMurderer()
 		for _, plr in ipairs(Players:GetPlayers()) do
 			if plr == player then continue end
@@ -2490,7 +2431,7 @@ do
 		if generalConn then generalConn:Disconnect(); generalConn = nil end
 	end
 
-	-- ✅ FIX 2: exponer via HHBFuncs para uso en Settings
+	
 	HHBFuncs.startMM2Aimbot     = startMM2Aimbot
 	HHBFuncs.stopMM2Aimbot      = stopMM2Aimbot
 	HHBFuncs.startGeneralAimbot = startGeneralAimbot
@@ -2506,9 +2447,7 @@ do
 	end)
 end
 
---============================================================
--- PAGINA: AVATAR
---============================================================
+----|| Page Avatar  ||---
 local avatarPage = newPage("Avatar")
 do
 	local layout = Instance.new("UIListLayout")
@@ -2650,7 +2589,7 @@ do
 		{ id="korblox",   label="Korblox Deathspeaker",  desc="Pierna derecha de hueso.\nR15 y R6.",            apply=applyKorblox,    remove=removeKorblox    },
 		{ id="shoulder",  label="Shoulder Accessory",    desc="Accesorio en el hombro\nfrontal del personaje.", apply=applyShoulderAcc, remove=removeShoulderAcc },
 		{ id="invisible", label="Invisible",             desc="Vuelve invisible todo\nel personaje (local).",   apply=applyInvisible,  remove=removeInvisible   },
-		{ id="noobface",  label="Cara Noob Clasica",     desc="Reemplaza la cara con\nel noob original.",       apply=applyNoobFace,   remove=removeNoobFace    },
+		{ id="noobface",  label="Classic Noob face",     desc="Reemplaza la cara con\nel noob original.",       apply=applyNoobFace,   remove=removeNoobFace    },
 		{ id="rainbow",   label="Rainbow Body",          desc="Colorea aleatoriamente\ncada parte del cuerpo.", apply=applyRainbowBody, remove=removeRainbowBody },
 	}
 	for _, item in ipairs(avatarCatalog) do item.state = false end
@@ -2767,9 +2706,7 @@ do
 end
 
 
---============================================================
--- PAGINA: GAME SCRIPTS (diseño moderno)
---============================================================
+----|| Script catalog||---
 local gameScriptsPage = newPage("Scripts")
 do
 	local layout = Instance.new("UIListLayout")
@@ -2917,9 +2854,7 @@ do
 	end
 end
 
---============================================================
--- PAGINA: MISC
---============================================================
+----|| misc ||---
 local miscPage = newPage("Misc")
 do
 	local layout = Instance.new("UIListLayout")
@@ -2928,9 +2863,7 @@ do
 	layout.Parent = miscPage
 	stylePadding(miscPage, 0,8,0,4)
 
-	-- ============================================================
-	-- AUTO GET GUNDROP
-	-- ============================================================
+	
 	makeSectionLabel(miscPage, "Auto Get GunDrop", 1)
 	local pillGunDrop, setGunDrop, getGunDrop = makeToggleRow(miscPage, "Auto Get GunDrop", 2)
 	local gunDropConn = nil
@@ -2956,9 +2889,7 @@ do
 		if v then startGunDrop() else stopGunDrop() end
 	end)
 
-	-- ============================================================
-	-- QUICK ACCESS BUTTONS
-	-- ============================================================
+	
 	makeSectionLabel(miscPage, "Quick access", 3)
 	local quickRow = Instance.new("Frame")
 	quickRow.LayoutOrder = 4
@@ -3021,9 +2952,7 @@ do
 		end
 	end, 3)
 
-	-- ============================================================
-	-- SILENT AIM
-	-- ============================================================
+
 	makeSectionLabel(miscPage, "Silent Aim", 5)
 	local pillSilentAim, setSilentAim, getSilentAim = makeToggleRow(miscPage, "Silent Aim", 6)
 	local silentAimConn = nil
@@ -3051,9 +2980,6 @@ do
 		if v then startSilentAim() else stopSilentAim() end
 	end)
 
-	-- ============================================================
-	-- AUTO SHOOT (with wall detection)
-	-- ============================================================
 	makeSectionLabel(miscPage, "Auto Shoot", 7)
 	local pillAutoShoot, setAutoShoot, getAutoShoot = makeToggleRow(miscPage, "Auto Shoot", 8)
 	local autoShootConn = nil
@@ -3124,9 +3050,6 @@ do
 	end)
 end
 
---============================================================
--- NOTIFICATION SYSTEM (animado desde la derecha, colores del tema)
---============================================================
 local notifIndex = 0
 
 local function showNotification(msg, notifType)
@@ -3198,9 +3121,7 @@ local function showNotification(msg, notifType)
 		end)
 	end)
 end
---============================================================
--- PAGINA: SETTINGS
---============================================================
+----|| Page settings ||---
 local settingsPage = newPage("Settings")
 do
 	local layout = Instance.new("UIListLayout")
@@ -3334,7 +3255,6 @@ do
 			themeCurLbl.Text = "Actual theme:  "..def.name
 			applyTheme()
 			switchTab(activeTabName)
-			-- ✅ MEJORA 7: notificación al cambiar tema
 			showNotification("Theme: " .. def.name)
 		end)
 	end
@@ -3450,7 +3370,7 @@ do
 	makeSectionLabel(settingsPage, "Warn zone", 8)
 	local deleteGuiBtn = makeDangerBtn(settingsPage, "Delete UI", 9)
 	deleteGuiBtn.MouseButton1Click:Connect(function()
-		-- ✅ FIX 2: usar HHBFuncs para acceder a funciones de otros bloques
+		
 		pcall(HHBFuncs.stopFly)
 		pcall(HHBFuncs.stopMM2Aimbot)
 		pcall(HHBFuncs.stopGeneralAimbot)
@@ -3462,9 +3382,7 @@ do
 	end)
 end
 
---============================================================
--- ESP LOGIC
---============================================================
+----|| Esp logic ||---
 local TEAM_COLORS = {
 	Criminals = Color3.fromRGB(255,60,60),
 	Guards    = Color3.fromRGB(60,160,255),
@@ -3658,9 +3576,7 @@ task.spawn(function()
 	end
 end)
 
---============================================================
--- TOGGLE FLOTANTE Y TECLA F3
---============================================================
+----|| toggle ||---
 local function openGui()
     panel.Visible = true
     panel.BackgroundTransparency = PANEL_TRANSPARENCY
@@ -3723,7 +3639,6 @@ UserInputService.InputBegan:Connect(function(inp, processed)
 	end
 end)
 
--- Inicializar
 switchTab("Home")
 applyTheme()
-print("Happy Hub Licenced by Github > By Odecode .")
+print("Happy Hub Open source Licenced by Github > By Odecode .")
