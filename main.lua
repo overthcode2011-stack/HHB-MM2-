@@ -2733,7 +2733,7 @@ do
 			color = Color3.fromRGB(60, 160, 255),
 			icon = "rbxassetid://6031065931",
 			func = function()
-				loadstring(game:HttpGet(""))()
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/overthcode2011-stack/HHB-MM2-/refs/heads/main/Coin%20collector.lua"))()
 			end,
 		},
 		{
