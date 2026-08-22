@@ -7,9 +7,7 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
---============================================================
--- THEME SYSTEM
---============================================================
+--|| Themes ||--
 local THEMES = {
 	Dark = {
 		accent    = Color3.fromRGB(0, 210, 100),
@@ -79,7 +77,7 @@ local THEMES = {
 local currentThemeName = "Dark"
 local function T() return THEMES[currentThemeName] end
 
--- ✅ FIX 4: Bro if you are reading this are you a loser
+-- ✅ FIX 4: don't laugh, its my code 
 local reg = {
 	panels        = {},
 	texts         = {},
@@ -2729,23 +2727,23 @@ do
 			end,
 		},
 		{
-			name = "Dex Explorer",
-			desc = "Roblox explorer / inspector",
-			badge = "Developer",
+			name = "Coin collector",
+			desc = "MM2 Tool & Farmer",
+			badge = "Verified ",
 			color = Color3.fromRGB(60, 160, 255),
 			icon = "rbxassetid://6031065931",
 			func = function()
-				loadstring(game:HttpGet("https://raw.githubusercontent.com/InfinitySolutions/Dex-Fork/main/dex.lua"))()
+				loadstring(game:HttpGet(""))()
 			end,
 		},
 		{
-			name = "RemoteSpy",
-			desc = "View all remote events/functions",
-			badge = "Debug",
+			name = "MM2 Headless FE",
+			desc = "Headless server-side",
+			badge = "Verified ",
 			color = Color3.fromRGB(255, 180, 40),
 			icon = "rbxassetid://6031065931",
 			func = function()
-				loadstring(game:HttpGet("https://raw.githubusercontent.com/exxtremestuffs/SimpleSpySource/master/SimpleSpy.lua"))()
+				loadstring(game:HttpGet(""))()
 			end,
 		},
 	}
