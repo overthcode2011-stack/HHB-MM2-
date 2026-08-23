@@ -259,34 +259,17 @@ local function obtainSheriffGun()
     if not char then return false end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return false end
-    local gunDropCFrame = findGunDropCFrame()
-    if not gunDropCFrame then return false end
-    
-    -- Guardamos la posición original
+    local gunCFrame = findGunDropCFrame()
+    if not gunCFrame then return false end
     local originalCF = hrp.CFrame
-    
-    -- Movemos el HRP a la gun en el mismo frame (sin esperar)
-    hrp.CFrame = gunDropCFrame + Vector3.new(0, 3, 0) -- ajuste para que toque la gun
-    
-    -- Forzamos reinicio de velocidad (opcional)
-    hrp.Velocity = Vector3.zero
-    hrp.RotVelocity = Vector3.zero
-    
-    -- Restauramos en el siguiente frame (casi instantáneo, imperceptible)
-    task.defer(function()
-        if hrp and hrp.Parent then
-            hrp.CFrame = originalCF
-        end
-    end)
-    
-    -- Verificamos si obtuvimos el arma
-    task.wait(0.1) -- pequeña pausa para que el servidor procese
+    hrp.CFrame = gunCFrame + Vector3.new(0, 5, 0)
+    task.wait(0.5)
+    hrp.CFrame = originalCF
     local bp = player:FindFirstChild("Backpack")
-    if bp and bp:FindFirstChild("Gun") then
-        return true
-    end
+    if bp and bp:FindFirstChild("Gun") then return true end
     return false
 end
+
 
 -------------||  reutilizable styles ||----------------
 local function styleCorner(obj, radius)
@@ -2866,83 +2849,31 @@ do
 	stylePadding(miscPage, 0,8,0,4)
 
 	
-	-- ============================================================
--- AUTO GET GUNDROP (con toggle + listener del evento GiveWeapon)
--- ============================================================
-makeSectionLabel(miscPage, "Auto Get GunDrop", 1)
+makeSectionLabel(miscPage, "Auto pick up gun", 1)
+	local pillGunDrop, setGunDrop, getGunDrop = makeToggleRow(miscPage, "Auto Get GunDrop", 2)
+	local gunDropConn = nil
+	local function startGunDrop()
+		gunDropConn = task.spawn(function()
+			while getGunDrop() do
+				local success = obtainSheriffGun()
+				if success then
+					showNotification("GunDrop obtained!")
+				end
+				task.wait(3)
+			end
+		end)
+	end
+	local function stopGunDrop()
+		if gunDropConn then
+			coroutine.close(gunDropConn)
+			gunDropConn = nil
+		end
+	end
+	pillGunDrop.MouseButton1Click:Connect(function()
+		local v = not getGunDrop(); setGunDrop(v)
+		if v then startGunDrop() else stopGunDrop() end
+	end)
 
--- Creamos el toggle
-local pillGunDrop, setGunDrop, getGunDrop = makeToggleRow(miscPage, "Auto gun pick up", 2)
-
--- Variable para almacenar la conexión del evento
-local gunDropListenerConn = nil
-
--- Función que simula el toque (versión instantánea)
-local function triggerGunDropTouch()
-    local char = player.Character
-    if not char then return false end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return false end
-    local gunDropCFrame = findGunDropCFrame()
-    if not gunDropCFrame then return false end
-    
-    local originalCF = hrp.CFrame
-    hrp.CFrame = gunDropCFrame + Vector3.new(0, 3, 0)
-    hrp.Velocity = Vector3.zero
-    hrp.RotVelocity = Vector3.zero
-    
-    task.defer(function()
-        if hrp and hrp.Parent then
-            hrp.CFrame = originalCF
-        end
-    end)
-    
-    task.wait(0.1)
-    local bp = player:FindFirstChild("Backpack")
-    if bp and bp:FindFirstChild("Gun") then
-        return true
-    end
-    return false
-end
-
--- Función que se ejecutará cuando se dispare el evento GiveWeapon
-local function onGiveWeapon()
-    -- Solo actuar si el toggle está activado
-    if not getGunDrop() then return end
-    
-    local success = triggerGunDropTouch()
-    if success then
-        showNotification(" Arma obtenida automáticamente!")
-    end
-end
-
--- Acción del toggle: activar/desactivar el listener
-pillGunDrop.MouseButton1Click:Connect(function()
-    local v = not getGunDrop()
-    setGunDrop(v)
-    
-    if v then
-        -- Buscar el evento GiveWeapon
-        local replicatedStorage = game:GetService("ReplicatedStorage")
-        local giveWeaponEvent = replicatedStorage:FindFirstChild("Remotes") 
-            and replicatedStorage.Remotes:FindFirstChild("Gameplay") 
-            and replicatedStorage.Remotes.Gameplay:FindFirstChild("GiveWeapon")
-        
-        if giveWeaponEvent then
-            gunDropListenerConn = giveWeaponEvent.OnClientEvent:Connect(onGiveWeapon)
-            showNotification("Auto Get GunDrop activado")
-        else
-            showNotification("Evento GiveWeapon no encontrado", "warning")
-            setGunDrop(false) -- desactivamos el toggle porque no funciona
-        end
-    else
-        if gunDropListenerConn then
-            gunDropListenerConn:Disconnect()
-            gunDropListenerConn = nil
-        end
-        showNotification("Auto Get GunDrop desactivado")
-    end
-end)
 	
 	makeSectionLabel(miscPage, "Quick access", 3)
 	local quickRow = Instance.new("Frame")
