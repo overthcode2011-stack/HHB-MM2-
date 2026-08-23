@@ -8,12 +8,12 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
 local Player = Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
+local CoreGui = game:GetService("CoreGui")
 
 -- ============================================================
 -- INTEGRACIÓN CON HAPPY HUB (temas, estilos)
 -- ============================================================
-local HHB = PlayerGui:FindFirstChild("HappyHub")
+local HHB = CoreGui:FindFirstChild("HappyHub")
 local useHappyHubTheme = false
 local HHB_CONNECTED = false
 
