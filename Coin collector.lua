@@ -134,8 +134,8 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "CoinCollectorHH"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-screenGui.DisplayOrder = 998
-screenGui.Parent = PlayerGui
+screenGui.DisplayOrder = 999
+screenGui.Parent = CoreGui
 
 -- Panel principal (rediseñado)
 local panel = Instance.new("Frame")
@@ -195,7 +195,7 @@ local icon = Instance.new("TextLabel")
 icon.Size = UDim2.new(0, 28, 0, 28)
 icon.Position = UDim2.new(0, 12, 0.5, -14)
 icon.BackgroundTransparency = 1
-icon.Text = "🪙"
+icon.Text = "·$·"
 icon.TextColor3 = Color3.fromRGB(255, 215, 0)
 icon.Font = Enum.Font.GothamBold
 icon.TextSize = 20
@@ -218,7 +218,7 @@ local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(0, 140, 0, 16)
 statusLabel.Position = UDim2.new(0, 46, 0, 26)
 statusLabel.BackgroundTransparency = 1
-statusLabel.Text = "🟢 Estado: Apagado"
+statusLabel.Text = "Status: off"
 statusLabel.TextColor3 = T().subtext
 statusLabel.Font = Enum.Font.Gotham
 statusLabel.TextSize = 11
@@ -302,7 +302,7 @@ local coinIcon = Instance.new("TextLabel")
 coinIcon.Size = UDim2.new(0, 32, 0, 32)
 coinIcon.Position = UDim2.new(0, 6, 0.5, -16)
 coinIcon.BackgroundTransparency = 1
-coinIcon.Text = "🪙"
+coinIcon.Text = "·$·"
 coinIcon.TextColor3 = Color3.fromRGB(255, 215, 0)
 coinIcon.Font = Enum.Font.GothamBold
 coinIcon.TextSize = 20
@@ -312,7 +312,7 @@ local counterLabel = Instance.new("TextLabel")
 counterLabel.Size = UDim2.new(1, -90, 0, 20)
 counterLabel.Position = UDim2.new(0, 42, 0, 2)
 counterLabel.BackgroundTransparency = 1
-counterLabel.Text = "Monedas recolectadas"
+counterLabel.Text = "Coins collected"
 counterLabel.TextColor3 = T().subtext
 counterLabel.Font = Enum.Font.Gotham
 counterLabel.TextSize = 11
@@ -334,7 +334,7 @@ local coinRateLabel = Instance.new("TextLabel")
 coinRateLabel.Size = UDim2.new(1, -90, 0, 14)
 coinRateLabel.Position = UDim2.new(0, 42, 0, 20)
 coinRateLabel.BackgroundTransparency = 1
-coinRateLabel.Text = "Esperando..."
+coinRateLabel.Text = "Waiting..."
 coinRateLabel.TextColor3 = T().subtext
 coinRateLabel.Font = Enum.Font.Gotham
 coinRateLabel.TextSize = 10
@@ -358,7 +358,7 @@ local speedLabel = Instance.new("TextLabel")
 speedLabel.Size = UDim2.new(1, -60, 0, 18)
 speedLabel.Position = UDim2.new(0, 10, 0, 4)
 speedLabel.BackgroundTransparency = 1
-speedLabel.Text = "Velocidad"
+speedLabel.Text = "Speed"
 speedLabel.TextColor3 = T().text
 speedLabel.TextXAlignment = Enum.TextXAlignment.Left
 speedLabel.TextSize = 12
@@ -419,7 +419,7 @@ local radiusLabel = Instance.new("TextLabel")
 radiusLabel.Size = UDim2.new(1, -60, 0, 18)
 radiusLabel.Position = UDim2.new(0, 10, 0, 4)
 radiusLabel.BackgroundTransparency = 1
-radiusLabel.Text = "Radio de agarre"
+radiusLabel.Text = "Ratio"
 radiusLabel.TextColor3 = T().text
 radiusLabel.TextXAlignment = Enum.TextXAlignment.Left
 radiusLabel.TextSize = 12
@@ -480,7 +480,7 @@ local delayLabel = Instance.new("TextLabel")
 delayLabel.Size = UDim2.new(1, -60, 0, 18)
 delayLabel.Position = UDim2.new(0, 10, 0, 4)
 delayLabel.BackgroundTransparency = 1
-delayLabel.Text = "Demora al agarrar"
+delayLabel.Text = "time to get"
 delayLabel.TextColor3 = T().text
 delayLabel.TextXAlignment = Enum.TextXAlignment.Left
 delayLabel.TextSize = 12
@@ -541,7 +541,7 @@ local gunIcon = Instance.new("TextLabel")
 gunIcon.Size = UDim2.new(0, 32, 0, 32)
 gunIcon.Position = UDim2.new(0, 6, 0.5, -16)
 gunIcon.BackgroundTransparency = 1
-gunIcon.Text = "🔫"
+gunIcon.Text = "·"
 gunIcon.TextColor3 = T().accent
 gunIcon.Font = Enum.Font.GothamBold
 gunIcon.TextSize = 18
@@ -562,7 +562,7 @@ local gunStatus = Instance.new("TextLabel")
 gunStatus.Size = UDim2.new(1, -80, 0, 14)
 gunStatus.Position = UDim2.new(0, 42, 0, 20)
 gunStatus.BackgroundTransparency = 1
-gunStatus.Text = "Listo"
+gunStatus.Text = "Alright!"
 gunStatus.TextColor3 = T().subtext
 gunStatus.Font = Enum.Font.Gotham
 gunStatus.TextSize = 10
@@ -574,7 +574,7 @@ gunBtn.Size = UDim2.new(0, 62, 0, 28)
 gunBtn.Position = UDim2.new(1, -68, 0.5, -14)
 gunBtn.BackgroundColor3 = T().accent
 gunBtn.BackgroundTransparency = 0.1
-gunBtn.Text = "Obtener"
+gunBtn.Text = "Get"
 gunBtn.TextColor3 = T().text
 gunBtn.Font = Enum.Font.GothamBold
 gunBtn.TextSize = 11
@@ -954,8 +954,8 @@ local function startCollecting()
 		local target = getClosestCoin()
 		if not target then
 			flyBodyVelocity.Velocity = Vector3.zero
-			statusLabel.Text = "Estado: Sin monedas"
-			coinRateLabel.Text = "✅ Todas recolectadas!"
+			statusLabel.Text = "Status: without coins"
+			coinRateLabel.Text = "All is collected"
 			stopCollecting()
 			return
 		end
@@ -975,12 +975,12 @@ local function startCollecting()
 					flyBodyVelocity.Velocity = Vector3.zero
 					stopCollecting()
 				end
-				statusLabel.Text = "Estado: Buscando"
-				coinRateLabel.Text = "Volando a la moneda..."
+				statusLabel.Text = "Status searching"
+				coinRateLabel.Text = "Flying to coin..."
 			else
 				flyBodyVelocity.Velocity = Vector3.zero
-				statusLabel.Text = "Esperando..."
-				coinRateLabel.Text = "⏳ " .. string.format("%.1f", waitUntil - tick()) .. "s"
+				statusLabel.Text = "waiting..."
+				coinRateLabel.Text = "··· " .. string.format("%.1f", waitUntil - tick()) .. "s"
 			end
 			return
 		end
@@ -998,16 +998,16 @@ local function startCollecting()
 		local direction = (target.Position - currentHRP.Position).Unit
 		flyBodyVelocity.Velocity = direction * collectSpeed
 		flyBodyGyro.CFrame = CFrame.lookAt(currentHRP.Position, target.Position)
-		statusLabel.Text = "Estado: Buscando"
-		coinRateLabel.Text = "Volando a la moneda..."
+		statusLabel.Text = "Status: flying to coin"
+		coinRateLabel.Text = "flying to coin..."
 	end)
 end
 
 local function stopCollecting()
 	if not isCollecting then return end
 	isCollecting = false
-	statusLabel.Text = "Estado: Apagado"
-	coinRateLabel.Text = "Detenido"
+	statusLabel.Text = "Status: off"
+	coinRateLabel.Text = "Stopped"
 	updateToggleUI(false)
 
 	if coinConnection then
