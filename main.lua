@@ -5,8 +5,6 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-
 --|| Themes ||--
 local THEMES = {
 	Dark = {
@@ -486,7 +484,7 @@ screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.DisplayOrder = 999   
-screenGui.Parent = playerGui
+screenGui.Parent = game:GetService("CoreGui")
 
 local panel = Instance.new("Frame")
 panel.Name = "MainPanel"
