@@ -3367,7 +3367,9 @@ do
 	end)
 end
 
-----|| Esp logic ||---
+--============================================================
+-- ESP LOGIC  (bug fix: reaplica ESP y NameTags tras muerte)
+--============================================================
 local TEAM_COLORS = {
 	Criminals = Color3.fromRGB(255,60,60),
 	Guards    = Color3.fromRGB(60,160,255),
@@ -3378,20 +3380,22 @@ local function getTeamColor(plr)
 	return (plr.Team and TEAM_COLORS[plr.Team.Name]) or Color3.new(1,1,1)
 end
 local function isEnemy(plr)
-	if not espStates.getTeamOnly() then return true end
+	if not getStateTeamOnly() then return true end
 	return plr.Team ~= player.Team
 end
 
 local espPL, espMM2, espOG = {}, {}, {}
 
+-- ── Prison Life ESP ───────────────────────────────────────
 local function applyESP_PL(plr, char)
 	char = char or plr.Character
 	if plr == player or not char or not isEnemy(plr) then return end
+	-- Limpiar highlight muerto/inválido previo
 	local ex = char:FindFirstChild("HHB_ESP_PL")
 	if ex then ex.FillColor = getTeamColor(plr); espPL[plr]=ex; return end
 	local h = Instance.new("Highlight")
 	h.Name="HHB_ESP_PL"; h.FillColor=getTeamColor(plr); h.OutlineColor=Color3.new(1,1,1)
-	h.FillTransparency=0.5; h.OutlineTransparency=0
+	h.FillTransparency=0.2; h.OutlineTransparency=0
 	h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop; h.Parent=char
 	espPL[plr] = h
 end
@@ -3411,10 +3415,11 @@ local function disableESP_PL()
 	end
 end
 
+-- ── MM2 ESP ────────────────────────────────────────────────
 local ROLE_COLS = {
-	Murderer=Color3.fromRGB(220,50,50),
-	Sheriff=Color3.fromRGB(50,130,255),
-	Innocent=Color3.fromRGB(60,220,60)
+	Murderer=Color3.fromRGB(255, 0, 0),
+	Sheriff=Color3.fromRGB(0, 132, 255),
+	Innocent=Color3.fromRGB(56, 255, 112)
 }
 local function getRoleMM2(plr)
 	if not plr.Character then return "Innocent" end
@@ -3430,7 +3435,7 @@ local function applyESP_MM2(plr)
 	if ex then if ex.FillColor ~= col then ex.FillColor=col; ex.OutlineColor=col end; espMM2[plr]=ex; return end
 	local h = Instance.new("Highlight")
 	h.Name="HHB_ESP_MM2"; h.FillColor=col; h.OutlineColor=col
-	h.FillTransparency=0.5; h.OutlineTransparency=0
+	h.FillTransparency=0.2; h.OutlineTransparency=1
 	h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop; h.Adornee=plr.Character; h.Parent=plr.Character
 	espMM2[plr]=h
 end
@@ -3447,12 +3452,13 @@ local function disableESP_MM2()
 	end
 end
 
+-- ── OG ESP ────────────────────────────────────────────────
 local function applyESP_OG(plr)
 	if plr==player or not plr.Character then return end
 	local ex = plr.Character:FindFirstChild("HHB_ESP_OG"); if ex then espOG[plr]=ex; return end
 	local h = Instance.new("Highlight")
 	h.Name="HHB_ESP_OG"; h.FillColor=Color3.new(1,1,1); h.OutlineColor=Color3.new(1,1,1)
-	h.FillTransparency=0.5; h.OutlineTransparency=0
+	h.FillTransparency=0.5; h.OutlineTransparency=1
 	h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop; h.Adornee=plr.Character; h.Parent=plr.Character
 	espOG[plr]=h
 end
@@ -3469,15 +3475,18 @@ local function disableESP_OG()
 	end
 end
 
+-- ── Name Tags ─────────────────────────────────────────────
 local ntObjs = {}
 local function createNameTag(plr)
 	if plr==player then return end
 	local ch = plr.Character; if not ch then return end
 	local hrp = ch:FindFirstChild("HumanoidRootPart"); if not hrp then return end
+	-- Eliminar tag previo si existe (podría ser del personaje anterior)
 	if ntObjs[plr] and ntObjs[plr].bb and ntObjs[plr].bb.Parent then
 		ntObjs[plr].bb:Destroy()
 	end
 	if hrp:FindFirstChild("HHB_NameTag") then hrp:FindFirstChild("HHB_NameTag"):Destroy() end
+
 	local bb = Instance.new("BillboardGui")
 	bb.Name="HHB_NameTag"; bb.Size=UDim2.new(0,110,0,32)
 	bb.StudsOffset=Vector3.new(0,3.5,0); bb.AlwaysOnTop=true
@@ -3502,8 +3511,9 @@ local function disableNameTags()
 	for p in pairs(ntObjs) do removeNameTag(p) end
 end
 
+-- Heartbeat: actualiza distancia en name tags
 RunService.Heartbeat:Connect(function()
-	if not espStates.getNameTag() then return end
+	if not getStateNameTag() then return end
 	local myHRP = getHRP()
 	for plr, data in pairs(ntObjs) do
 		if plr.Character and data.lbl then
@@ -3517,50 +3527,78 @@ RunService.Heartbeat:Connect(function()
 	end
 end)
 
+-- ── ESP Pill connections ───────────────────────────────────
+pillPL.MouseButton1Click:Connect(function()
+	local v=not getStatePL(); setStatePL(v)
+	if v then enableESP_PL() else disableESP_PL() end
+end)
+pillMM2.MouseButton1Click:Connect(function()
+	local v=not getStateMM2(); setStateMM2(v)
+	if v then enableESP_MM2() else disableESP_MM2() end
+end)
+pillOG.MouseButton1Click:Connect(function()
+	local v=not getStateOG(); setStateOG(v)
+	if v then enableESP_OG() else disableESP_OG() end
+end)
+pillNameTag.MouseButton1Click:Connect(function()
+	local v=not getStateNameTag(); setStateNameTag(v)
+	if v then enableNameTags() else disableNameTags() end
+end)
+pillTeamOnly.MouseButton1Click:Connect(function()
+	setStateTeamOnly(not getStateTeamOnly())
+	if getStatePL() then disableESP_PL(); enableESP_PL() end
+end)
+
+-- ── CharacterAdded global: reaplica ESP + NameTags al respawn ──
+-- BUG FIX: ahora escucha a todos los jugadores existentes Y los que se unan
 local function connectPlayerESP(plr)
 	plr.CharacterAdded:Connect(function(char)
-		task.wait(0.5)
-		if espStates.getPL()      then applyESP_PL(plr, char)  end
-		if espStates.getMM2()     then applyESP_MM2(plr)        end
-		if espStates.getOG()      then applyESP_OG(plr)         end
-		if espStates.getNameTag() then createNameTag(plr)       end
+		task.wait(0.5) -- esperar que el personaje cargue bien
+		if getStatePL()      then applyESP_PL(plr, char)  end
+		if getStateMM2()     then applyESP_MM2(plr)        end
+		if getStateOG()      then applyESP_OG(plr)         end
+		if getStateNameTag() then createNameTag(plr)        end
 	end)
 	plr:GetPropertyChangedSignal("Team"):Connect(function()
-		if espStates.getPL() then
+		if getStatePL() then
 			local h = plr.Character and plr.Character:FindFirstChild("HHB_ESP_PL")
 			if h then h.FillColor = getTeamColor(plr) end
 		end
 	end)
 end
 
+-- Conectar a todos los jugadores ya en el servidor
 for _, plr in ipairs(Players:GetPlayers()) do
 	if plr ~= player then connectPlayerESP(plr) end
 end
-Players.PlayerAdded:Connect(function(plr) connectPlayerESP(plr) end)
+
+Players.PlayerAdded:Connect(function(plr)
+	connectPlayerESP(plr)
+end)
 Players.PlayerRemoving:Connect(function(plr)
 	removeNameTag(plr)
 	espPL[plr]=nil; espMM2[plr]=nil; espOG[plr]=nil
 end)
 
+-- Refresh loop para MM2 y OG (por cambios de rol en juego)
+local espLoopActive = true
 task.spawn(function()
-	while true do
+	while espLoopActive do
 		task.wait(2)
-		pcall(function()
-			if espStates.getMM2() then enableESP_MM2() end
-			if espStates.getOG()  then enableESP_OG()  end
-			if espStates.getPL() then
-				for _, plr in ipairs(Players:GetPlayers()) do
-					if plr.Character then
-						local h = plr.Character:FindFirstChild("HHB_ESP_PL")
-						if h and not isEnemy(plr) then h:Destroy(); espPL[plr]=nil
-						elseif not h and isEnemy(plr) then applyESP_PL(plr, plr.Character) end
-					end
+		if not espLoopActive then break end
+		if getStateMM2() then enableESP_MM2() end
+		if getStateOG()  then enableESP_OG()  end
+		if getStatePL()  then
+			for _, plr in ipairs(Players:GetPlayers()) do
+				if plr.Character then
+					local h = plr.Character:FindFirstChild("HHB_ESP_PL")
+					if h and not isEnemy(plr) then h:Destroy(); espPL[plr]=nil
+					elseif not h and isEnemy(plr) then applyESP_PL(plr, plr.Character) end
 				end
 			end
-		end)
+		end
 	end
 end)
-
 ----|| toggle ||---
 local function openGui()
     panel.Visible = true
