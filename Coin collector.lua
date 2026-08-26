@@ -9,24 +9,6 @@ local RunService = game:GetService("RunService")
 
 local Player = Players.LocalPlayer
 local CoreGui = game:GetService("CoreGui")
-
--- ============================================================
--- INTEGRACIÓN CON HAPPY HUB (temas, estilos)
--- ============================================================
-local HHB = CoreGui:FindFirstChild("HappyHub")
-local useHappyHubTheme = false
-local HHB_CONNECTED = false
-
-if HHB then
-	local success, result = pcall(function()
-		return HHB:FindFirstChild("MainPanel")
-	end)
-	if success and result then
-		useHappyHubTheme = true
-		HHB_CONNECTED = true
-	end
-end
-
 -- Sistema de temas propio (fallback si no hay Happy Hub)
 local THEMES = {
 	Dark = {
