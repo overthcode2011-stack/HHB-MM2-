@@ -3368,221 +3368,345 @@ do
 end
 
 --|| ESP LOGIC ||--
+local ESP = {
+    active = {
+        PL = false,
+        MM2 = false,
+        OG = false,
+        NameTag = false,
+        TeamOnly = false
+    },
+    highlights = {
+        PL = {},
+        MM2 = {},
+        OG = {}
+    },
+    nameTags = {},
+    connections = {}
+}
 
-local espHighlights = {} -- { [Player] = Highlight }
-local espConnections = {} -- { [Player] = { conexiones } }
+-- config
+local ESP_COLORS = {
+    PL = {
+        Criminals = Color3.fromRGB(255, 60, 60),
+        Guards = Color3.fromRGB(60, 160, 255),
+        Inmates = Color3.fromRGB(255, 180, 40),
+        Neutral = Color3.fromRGB(255, 255, 255)
+    },
+    MM2 = {
+        Murderer = Color3.fromRGB(255, 0, 0),
+        Sheriff = Color3.fromRGB(0, 132, 255),
+        Innocent = Color3.fromRGB(56, 255, 112)
+    },
+    OG = Color3.fromRGB(255, 255, 255)
+}
 
--- Funciones para obtener colores según el juego
-local function getPLColor(plr)
-    if not plr.Team then return Color3.new(1,1,1) end
-    local teamColors = {
-        Criminals = Color3.fromRGB(255,60,60),
-        Guards    = Color3.fromRGB(60,160,255),
-        Inmates   = Color3.fromRGB(255,180,40),
-    }
-    return teamColors[plr.Team.Name] or Color3.new(1,1,1)
+-- === FUNCIONES DE UTILIDAD ===
+local function getTeamColor(plr)
+    if not plr.Team then return ESP_COLORS.PL.Neutral end
+    return ESP_COLORS.PL[plr.Team.Name] or ESP_COLORS.PL.Neutral
 end
 
-local function getMM2Color(plr)
+local function getMM2Role(plr)
+    if plr == player then return "Innocent" end
     local char = plr.Character
     local bp = plr:FindFirstChild("Backpack")
-    if (bp and bp:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife")) then
-        return Color3.fromRGB(255,0,0) -- Asesino
-    elseif (bp and bp:FindFirstChild("Gun")) or (char and char:FindFirstChild("Gun")) then
-        return Color3.fromRGB(0,132,255) -- Sheriff
-    else
-        return Color3.fromRGB(56,255,112) -- Inocente
+    
+    if (char and char:FindFirstChild("Knife")) or (bp and bp:FindFirstChild("Knife")) then
+        return "Murderer"
+    end
+    if (char and char:FindFirstChild("Gun")) or (bp and bp:FindFirstChild("Gun")) then
+        return "Sheriff"
+    end
+    return "Innocent"
+end
+
+local function isEnemy(plr)
+    if not ESP.active.TeamOnly then return true end
+    return plr.Team ~= player.Team
+end
+
+-- === LIMPIAR HIGHLIGHTS DE UN JUGADOR ===
+local function clearHighlights(plr)
+    -- PL
+    if ESP.highlights.PL[plr] then
+        ESP.highlights.PL[plr]:Destroy()
+        ESP.highlights.PL[plr] = nil
+    end
+    -- MM2
+    if ESP.highlights.MM2[plr] then
+        ESP.highlights.MM2[plr]:Destroy()
+        ESP.highlights.MM2[plr] = nil
+    end
+    -- OG
+    if ESP.highlights.OG[plr] then
+        ESP.highlights.OG[plr]:Destroy()
+        ESP.highlights.OG[plr] = nil
+    end
+    -- NameTag
+    if ESP.nameTags[plr] then
+        if ESP.nameTags[plr].bb and ESP.nameTags[plr].bb.Parent then
+            ESP.nameTags[plr].bb:Destroy()
+        end
+        ESP.nameTags[plr] = nil
     end
 end
 
-local function getOGColor(plr)
-    return Color3.new(1,1,1) -- Blanco
-end
-
--- Aplicar ESP a un jugador
-local function applyESP(plr, espType)
+-- === APLICAR ESP A UN JUGADOR ===
+local function applyESP(plr)
     if plr == player then return end
-    if not plr.Character then return end
     
-    -- Si ya tiene highlight y el tipo coincide, no hacer nada
-    local existing = espHighlights[plr]
-    if existing and existing:IsA("Highlight") and existing.Parent then
-        -- Solo actualizar color si es necesario
-        local newColor
-        if espType == "PL" then
-            newColor = getPLColor(plr)
-        elseif espType == "MM2" then
-            newColor = getMM2Color(plr)
-        elseif espType == "OG" then
-            newColor = getOGColor(plr)
+    local char = plr.Character
+    if not char then return end
+    
+    -- Solo aplicar si el jugador está vivo
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum or hum.Health <= 0 then return end
+    
+    -- PL ESP
+    if ESP.active.PL and isEnemy(plr) then
+        if not ESP.highlights.PL[plr] then
+            local h = Instance.new("Highlight")
+            h.Name = "HHB_ESP_PL"
+            h.FillColor = getTeamColor(plr)
+            h.OutlineColor = Color3.new(1, 1, 1)
+            h.FillTransparency = 0.2
+            h.OutlineTransparency = 0
+            h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            h.Parent = char
+            ESP.highlights.PL[plr] = h
         end
-        if existing.FillColor ~= newColor then
-            existing.FillColor = newColor
-            existing.OutlineColor = newColor
-        end
-        return
+    elseif ESP.highlights.PL[plr] then
+        ESP.highlights.PL[plr]:Destroy()
+        ESP.highlights.PL[plr] = nil
     end
     
-    -- Crear nuevo highlight
-    local h = Instance.new("Highlight")
-    h.Name = "HHB_ESP_" .. espType
-    h.FillTransparency = 0.2
-    h.OutlineTransparency = 0.8
-    h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    
-    -- Asignar colores según tipo
-    if espType == "PL" then
-        h.FillColor = getPLColor(plr)
-        h.OutlineColor = h.FillColor
-    elseif espType == "MM2" then
-        h.FillColor = getMM2Color(plr)
-        h.OutlineColor = h.FillColor
-    elseif espType == "OG" then
-        h.FillColor = getOGColor(plr)
-        h.OutlineColor = h.FillColor
+    -- MM2 ESP
+    if ESP.active.MM2 then
+        local role = getMM2Role(plr)
+        if not ESP.highlights.MM2[plr] then
+            local h = Instance.new("Highlight")
+            h.Name = "HHB_ESP_MM2"
+            h.FillColor = ESP_COLORS.MM2[role]
+            h.OutlineColor = ESP_COLORS.MM2[role]
+            h.FillTransparency = 0.2
+            h.OutlineTransparency = 1
+            h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            h.Parent = char
+            ESP.highlights.MM2[plr] = h
+        else
+            -- Actualizar color si cambió de rol
+            ESP.highlights.MM2[plr].FillColor = ESP_COLORS.MM2[role]
+            ESP.highlights.MM2[plr].OutlineColor = ESP_COLORS.MM2[role]
+        end
+    elseif ESP.highlights.MM2[plr] then
+        ESP.highlights.MM2[plr]:Destroy()
+        ESP.highlights.MM2[plr] = nil
     end
     
-    h.Adornee = plr.Character
-    h.Parent = plr.Character
-    espHighlights[plr] = h
-    
-    -- Conectar eventos para actualizar color cuando cambie el rol/equipo
-    local conns = {}
-    if espType == "PL" then
-        -- Cambio de equipo
-        local teamConn = plr:GetPropertyChangedSignal("Team"):Connect(function()
-            if espHighlights[plr] and espHighlights[plr].Parent then
-                espHighlights[plr].FillColor = getPLColor(plr)
-                espHighlights[plr].OutlineColor = espHighlights[plr].FillColor
-            end
-        end)
-        table.insert(conns, teamConn)
-    elseif espType == "MM2" then
-        -- Cambio de rol (cuando obtiene o pierde cuchillo/arma) - se actualiza cada 2s en un loop ligero
-        -- pero para no hacer polling, usamos un evento de CharacterAdded y Backpack
-        local function updateMM2Color()
-            if espHighlights[plr] and espHighlights[plr].Parent then
-                espHighlights[plr].FillColor = getMM2Color(plr)
-                espHighlights[plr].OutlineColor = espHighlights[plr].FillColor
-            end
+    -- OG ESP
+    if ESP.active.OG then
+        if not ESP.highlights.OG[plr] then
+            local h = Instance.new("Highlight")
+            h.Name = "HHB_ESP_OG"
+            h.FillColor = ESP_COLORS.OG
+            h.OutlineColor = ESP_COLORS.OG
+            h.FillTransparency = 0.5
+            h.OutlineTransparency = 1
+            h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            h.Parent = char
+            ESP.highlights.OG[plr] = h
         end
-        -- Conectar a cambios en Backpack y Character
-        local bpConn
-        local function checkBackpack()
-            local bp = plr:FindFirstChild("Backpack")
-            if bp then
-                bpConn = bp.ChildAdded:Connect(updateMM2Color)
-                bp.ChildRemoved:Connect(updateMM2Color)
-            end
-        end
-        checkBackpack()
-        local charConn = plr.CharacterAdded:Connect(function()
-            task.wait(0.5)
-            updateMM2Color()
-            checkBackpack()
-        end)
-        table.insert(conns, bpConn)
-        table.insert(conns, charConn)
+    elseif ESP.highlights.OG[plr] then
+        ESP.highlights.OG[plr]:Destroy()
+        ESP.highlights.OG[plr] = nil
     end
-    -- Guardar conexiones para poder limpiarlas después
-    espConnections[plr] = conns
+    
+    -- NameTag
+    if ESP.active.NameTag then
+        if not ESP.nameTags[plr] then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local bb = Instance.new("BillboardGui")
+                bb.Name = "HHB_NameTag"
+                bb.Size = UDim2.new(0, 110, 0, 32)
+                bb.StudsOffset = Vector3.new(0, 3.5, 0)
+                bb.AlwaysOnTop = true
+                bb.Adornee = hrp
+                bb.Parent = hrp
+                
+                local lbl = Instance.new("TextLabel")
+                lbl.Size = UDim2.new(1, 0, 1, 0)
+                lbl.BackgroundTransparency = 1
+                lbl.TextColor3 = Color3.new(1, 1, 1)
+                lbl.Font = Enum.Font.GothamBold
+                lbl.TextSize = 13
+                lbl.TextStrokeTransparency = 0.4
+                lbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+                lbl.Parent = bb
+                
+                ESP.nameTags[plr] = {bb = bb, lbl = lbl}
+            end
+        end
+    elseif ESP.nameTags[plr] then
+        ESP.nameTags[plr].bb:Destroy()
+        ESP.nameTags[plr] = nil
+    end
 end
 
--- Quitar ESP de un jugador
-local function removeESP(plr)
-    local h = espHighlights[plr]
-    if h and h.Parent then h:Destroy() end
-    espHighlights[plr] = nil
-    -- Desconectar eventos
-    if espConnections[plr] then
-        for _, conn in ipairs(espConnections[plr]) do
-            if conn then conn:Disconnect() end
-        end
-        espConnections[plr] = nil
-    end
-end
-
--- Habilitar/deshabilitar ESP para todos los jugadores (para cada tipo)
-local espTypes = {"PL", "MM2", "OG"}
-local espEnabled = {PL = false, MM2 = false, OG = false}
-local espPlayerAddedConns = {}
-
-local function enableESPType(espType)
-    if espEnabled[espType] then return end
-    espEnabled[espType] = true
-    
-    -- Aplicar a todos los jugadores actuales (excepto el propio)
+local function refreshAllESP()
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= player then
-            applyESP(plr, espType)
+            -- Si el jugador no tiene personaje, limpiar sus highlights
+            if not plr.Character then
+                clearHighlights(plr)
+            else
+                applyESP(plr)
+            end
         end
     end
+end
+
+-- === ACTIVAR/DESACTIVAR ESP ===
+local function setESP(mode, active)
+    ESP.active[mode] = active
+    refreshAllESP()
+end
+
+-- === CONFIGURAR EVENTOS ===
+local function setupPlayerEvents(plr)
+    if plr == player then return end
     
-    -- Conectar a nuevos jugadores
-    local conn = Players.PlayerAdded:Connect(function(plr)
-        if plr ~= player then
-            plr.CharacterAdded:Connect(function()
-                task.wait(0.5) -- esperar a que cargue
-                if espEnabled[espType] then
-                    applyESP(plr, espType)
+    -- Cuando el personaje cambia (muerte/respawn)
+    local charConn
+    charConn = plr.CharacterAdded:Connect(function(char)
+        task.wait(0.3) -- Esperar a que cargue
+        -- Limpiar highlights viejos
+        clearHighlights(plr)
+        -- Aplicar nuevos
+        applyESP(plr)
+    end)
+    table.insert(ESP.connections, charConn)
+    
+    -- Cuando cambia de equipo (PL)
+    if plr:FindFirstChild("Team") then
+        local teamConn = plr:GetPropertyChangedSignal("Team"):Connect(function()
+            if ESP.active.PL then
+                applyESP(plr)
+            end
+        end)
+        table.insert(ESP.connections, teamConn)
+    end
+    
+    -- Cuando el jugador sale
+    local removeConn = plr.AncestryChanged:Connect(function()
+        if not plr.Parent then
+            clearHighlights(plr)
+        end
+    end)
+    table.insert(ESP.connections, removeConn)
+end
+
+-- === CONFIGURAR JUGADORES EXISTENTES ===
+for _, plr in ipairs(Players:GetPlayers()) do
+    if plr ~= player then
+        setupPlayerEvents(plr)
+    end
+end
+
+-- === NUEVOS JUGADORES ===
+Players.PlayerAdded:Connect(function(plr)
+    setupPlayerEvents(plr)
+end)
+
+-- === ACTUALIZAR DISTANCIAS EN NAMETAGS ===
+local nameTagUpdater
+local function startNameTagUpdater()
+    if nameTagUpdater then return end
+    nameTagUpdater = RunService.Heartbeat:Connect(function()
+        if not ESP.active.NameTag then return end
+        
+        local myHRP = getHRP()
+        if not myHRP then return end
+        
+        for plr, data in pairs(ESP.nameTags) do
+            if plr.Character and data.lbl then
+                local theirHRP = plr.Character:FindFirstChild("HumanoidRootPart")
+                if theirHRP then
+                    local dist = math.floor((myHRP.Position - theirHRP.Position).Magnitude)
+                    data.lbl.Text = plr.DisplayName .. "\n" .. dist .. "m"
+                else
+                    data.lbl.Text = plr.DisplayName
                 end
-            end)
-            if espEnabled[espType] and plr.Character then
-                applyESP(plr, espType)
             end
         end
     end)
-    espPlayerAddedConns[espType] = conn
 end
 
-local function disableESPType(espType)
-    if not espEnabled[espType] then return end
-    espEnabled[espType] = false
-    
-    -- Eliminar highlights de todos los jugadores
-    for plr, _ in pairs(espHighlights) do
-        if espHighlights[plr] and espHighlights[plr].Name:find(espType) then
-            removeESP(plr)
-        end
-    end
-    
-    -- Desconectar el evento de PlayerAdded
-    if espPlayerAddedConns[espType] then
-        espPlayerAddedConns[espType]:Disconnect()
-        espPlayerAddedConns[espType] = nil
-    end
-end
-
--- Funciones públicas para activar/desactivar cada tipo
+-- === FUNCIONES PÚBLICAS PARA LOS TOGGLES ===
 function enableESP_PL()
-    enableESPType("PL")
+    setESP("PL", true)
 end
+
 function disableESP_PL()
-    disableESPType("PL")
+    setESP("PL", false)
 end
 
 function enableESP_MM2()
-    enableESPType("MM2")
+    setESP("MM2", true)
 end
+
 function disableESP_MM2()
-    disableESPType("MM2")
+    setESP("MM2", false)
 end
 
 function enableESP_OG()
-    enableESPType("OG")
-end
-function disableESP_OG()
-    disableESPType("OG")
+    setESP("OG", true)
 end
 
--- Limpiar todo si se destruye la GUI
-screenGui.AncestryChanged:Connect(function()
-    if not screenGui:IsDescendantOf(game) then
-        for _, typ in ipairs(espTypes) do
-            disableESPType(typ)
-        end
+function disableESP_OG()
+    setESP("OG", false)
+end
+
+function enableNameTags()
+    setESP("NameTag", true)
+    startNameTagUpdater()
+end
+
+function disableNameTags()
+    setESP("NameTag", false)
+    if nameTagUpdater then
+        nameTagUpdater:Disconnect()
+        nameTagUpdater = nil
     end
-end)
+end
+
+function setTeamOnly(active)
+    ESP.active.TeamOnly = active
+    if ESP.active.PL then
+        refreshAllESP()
+    end
+end
+
+-- === LIMPIEZA AL CERRAR GUI ===
+local function cleanupESP()
+    for _, conn in ipairs(ESP.connections) do
+        conn:Disconnect()
+    end
+    ESP.connections = {}
+    
+    if nameTagUpdater then
+        nameTagUpdater:Disconnect()
+        nameTagUpdater = nil
+    end
+    
+    for _, plr in ipairs(Players:GetPlayers()) do
+        clearHighlights(plr)
+    end
+end
+
+-- Guardar referencia para limpiar
+HHBFuncs.cleanupESP = cleanupESP
 
 ----|| toggle ||---
 local function openGui()
