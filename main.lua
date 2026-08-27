@@ -2942,30 +2942,71 @@ do
 
 	
 makeSectionLabel(miscPage, "Auto pick up gun", 1)
-	local pillGunDrop, setGunDrop, getGunDrop = makeToggleRow(miscPage, "Auto Get GunDrop", 2)
-	local gunDropConn = nil
-	local function startGunDrop()
-		gunDropConn = task.spawn(function()
-			while getGunDrop() do
-				local success = obtainSheriffGun()
-				if success then
-					showNotification("GunDrop obtained!")
-				end
-				task.wait(3)
-			end
-		end)
-	end
-	local function stopGunDrop()
-		if gunDropConn then
-			coroutine.close(gunDropConn)
-			gunDropConn = nil
-		end
-	end
-	pillGunDrop.MouseButton1Click:Connect(function()
-		local v = not getGunDrop(); setGunDrop(v)
-		if v then startGunDrop() else stopGunDrop() end
-	end)
+local pillGunDrop, setGunDrop, getGunDrop = makeToggleRow(miscPage, "Auto Get GunDrop", 2)
 
+-- Variables de control
+local gunDropRunning = false
+local gunDropThread = nil
+
+local function startGunDrop()
+    if gunDropRunning then return end  -- Evita iniciar dos veces
+    gunDropRunning = true
+
+    gunDropThread = task.spawn(function()
+        while gunDropRunning do
+            -- 1. Verificar si ya tenemos el arma
+            local hasGun = false
+            local bp = player:FindFirstChild("Backpack")
+            local char = player.Character
+
+            -- Comprobar nombres comunes
+            local gunNames = {"Gun", "SheriffGun", "Pistol", "Revolver", "Weapon"}
+            for _, name in ipairs(gunNames) do
+                if (bp and bp:FindFirstChild(name)) or (char and char:FindFirstChild(name)) then
+                    hasGun = true
+                    break
+                end
+            end
+
+            -- 2. Si NO tenemos el arma, intentar obtenerla
+            if not hasGun then
+                local success = obtainSheriffGun()
+                if success then
+                    showNotification("GunDrop obtained!")
+                end
+            end
+
+            -- 3. Esperar 1 segundo antes de la siguiente verificación
+            task.wait(1)
+        end
+    end)
+end
+
+local function stopGunDrop()
+    gunDropRunning = false
+    if gunDropThread then
+        task.cancel(gunDropThread)   -- Detiene el hilo de forma segura
+        gunDropThread = nil
+    end
+end
+
+-- Conectar el toggle
+pillGunDrop.MouseButton1Click:Connect(function()
+    local v = not getGunDrop()
+    setGunDrop(v)
+    if v then
+        startGunDrop()
+    else
+        stopGunDrop()
+    end
+end)
+
+-- Limpieza al cerrar el GUI (opcional)
+screenGui.AncestryChanged:Connect(function()
+    if not screenGui:IsDescendantOf(game) then
+        stopGunDrop()
+    end
+end)
 	
 	makeSectionLabel(miscPage, "Quick access", 3)
 	local quickRow = Instance.new("Frame")
