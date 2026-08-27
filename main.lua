@@ -261,14 +261,35 @@ local function obtainSheriffGun()
     if not char then return false end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return false end
+
     local gunCFrame = findGunDropCFrame()
     if not gunCFrame then return false end
+
+    -- Guardar la posición original del jugador
     local originalCF = hrp.CFrame
-    hrp.CFrame = gunCFrame + Vector3.new(0, 5, 0)
+
+    -- Calcular una posición al lado del arma (desplazada en X y Z)
+    local offset = Vector3.new(2, 0, 2)  -- 2 studs en X y 2 en Z
+    -- Asegurar que el jugador quede a la altura correcta (suelo + 2 studs)
+    local targetY = gunCFrame.Y + 2  -- ajusta según necesites
+    local targetPos = gunCFrame.Position + offset
+    targetPos = Vector3.new(targetPos.X, targetY, targetPos.Z)
+
+    -- Mover al jugador a esa posición, mirando hacia el arma
+    local lookAt = CFrame.lookAt(targetPos, gunCFrame.Position)
+    hrp.CFrame = lookAt
+
+    -- Esperar un momento para que el juego detecte la colisión y recoja el arma
     task.wait(0.5)
+
+    -- Volver a la posición original
     hrp.CFrame = originalCF
+
+    -- Verificar si tenemos el arma
     local bp = player:FindFirstChild("Backpack")
     if bp and bp:FindFirstChild("Gun") then return true end
+    if char:FindFirstChild("Gun") then return true end
+
     return false
 end
 
