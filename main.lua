@@ -3858,4 +3858,5 @@ end)
 
 switchTab("Home")
 applyTheme()
-print("Happy Hub Open source Licenced by Github > By Odecode .")
+rconsolecreate() 
+rconsoleprint("\27[38;2;0;255;0mHappy Hub Open source Licenced by Github > By Odecode .\n")---aplicar aqui
