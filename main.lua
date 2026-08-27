@@ -3858,7 +3858,4 @@ end)
 
 switchTab("Home")
 applyTheme()
-rconsolecreate() 
-rconsoleprint("\27[38;2;255;0;0mEste texto es rojo en la consola externa.\n")
-rconsoleprint("\27[38;2;0;255;0mEste texto es verde en la consola externa.\n")
-rconsoleprint("\27[38;2;0;255;0mHappy Hub Open source Licenced by Github > By Odecode .\n")---aplicar aqui
+print("\27[38;2;0;255;0mHappy Hub Open source Licenced by Github > By Odecode .\n")---aplicar aqui
