@@ -2085,6 +2085,7 @@ do
 	movementStates.getInfiniteJump = getIJ; movementStates.setInfiniteJump = setIJ
 	movementStates.getAntiAFK = getAntiAFK; movementStates.setAntiAFK = setAntiAFK
 	movementStates.getAntiFling = getAntiFling; movementStates.setAntiFling = setAntiFling
+	
 
 	pillNoclip.MouseButton1Click:Connect(function()
 		local v = not getNoclip(); setNoclip(v)
@@ -2141,51 +2142,110 @@ do
 		end
 	end)
 
-	-- Variables para el Anti-Fling mejorado
-local antiFlingConn = nil
-local antiFlingLastPos = nil
-local antiFlingLastTime = 0
-local ANTI_FLING_MAX_VEL = 250  -- Velocidad máxima permitida
-local ANTI_FLING_CHECK_INTERVAL = 0.1  -- Cada cuánto revisar
 
--- Función para activar el Anti-Fling
-local function startAntiFling()
-    if antiFlingConn then return end
-    
-    antiFlingLastPos = nil
-    antiFlingLastTime = 0
-    
-    antiFlingConn = RunService.Heartbeat:Connect(function()
-        local hrp = getHRP()
-        if not hrp then return end
-        
-        local currentPos = hrp.Position
-        local velocity = hrp.AssemblyLinearVelocity
-        local speed = velocity.Magnitude
-        
-        -- Si la velocidad es muy alta, te están flingeando
-        if speed > ANTI_FLING_MAX_VEL then
-            -- Si tenemos una posición anterior guardada, teletransportar de vuelta
-            if antiFlingLastPos then
-                hrp.CFrame = CFrame.new(antiFlingLastPos) * (hrp.CFrame - hrp.CFrame.Position)
-                hrp.AssemblyLinearVelocity = Vector3.zero
-            end
-        else
-            -- Guardar la posición actual solo si la velocidad es normal
-            antiFlingLastPos = currentPos
-        end
-    end)
-end
+-- Variables para Anti-Fling (versión simple: desactivar colisiones de HRP de otros)
+local antiFlingConnections = {}  -- Para limpiar eventos al desactivar
+local antiFlingActive = false
 
--- Función para desactivar el Anti-Fling
-local function stopAntiFling()
-    if antiFlingConn then
-        antiFlingConn:Disconnect()
-        antiFlingConn = nil
+-- Función que desactiva colisiones de un jugador específico
+local function disableHRPCollision(plr)
+    if plr == player then return end
+    local char = plr.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        hrp.CanCollide = false
     end
-    antiFlingLastPos = nil
 end
-	
+
+-- Función que reactiva colisiones de un jugador (para cuando se desactiva el anti-fling)
+local function enableHRPCollision(plr)
+    if plr == player then return end
+    local char = plr.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        hrp.CanCollide = true
+    end
+end
+
+-- Aplicar a todos los jugadores actuales
+local function applyToAllPlayers(action)
+    for _, plr in ipairs(Players:GetPlayers()) do
+        action(plr)
+    end
+end
+
+-- Iniciar Anti-Fling: desactivar colisiones de todos los HRP de otros
+local function startAntiFling()
+    if antiFlingActive then return end
+    antiFlingActive = true
+
+    -- 1. Aplicar a jugadores actuales
+    applyToAllPlayers(disableHRPCollision)
+
+    -- 2. Conectar eventos para nuevos jugadores y respawns
+    local function onPlayerAdded(plr)
+        if plr == player then return end
+        -- Cuando el personaje del jugador aparezca, desactivar colisión
+        local charConn = plr.CharacterAdded:Connect(function(char)
+            task.wait(0.1)  -- Esperar a que el HRP exista
+            if antiFlingActive then
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    hrp.CanCollide = false
+                end
+            end
+        end)
+        table.insert(antiFlingConnections, charConn)
+
+        -- También aplicar si ya tiene personaje (por si se unió después de activar)
+        if plr.Character then
+            task.wait(0.1)
+            if antiFlingActive then
+                local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    hrp.CanCollide = false
+                end
+            end
+        end
+    end
+
+    -- Conectar el evento PlayerAdded
+    local playerAddedConn = Players.PlayerAdded:Connect(onPlayerAdded)
+    table.insert(antiFlingConnections, playerAddedConn)
+
+    -- También manejar CharacterAdded del jugador local (por si cambia algo, aunque no es necesario)
+    -- Pero no es necesario, porque solo afectamos a otros.
+
+    showNotification("Anti-Fling activado (colisiones de otros desactivadas)")
+end
+
+-- Detener Anti-Fling: restaurar colisiones de todos los HRP
+local function stopAntiFling()
+    if not antiFlingActive then return end
+    antiFlingActive = false
+
+    -- 1. Restaurar colisiones de todos los jugadores actuales
+    applyToAllPlayers(enableHRPCollision)
+
+    -- 2. Desconectar todos los eventos
+    for _, conn in ipairs(antiFlingConnections) do
+        conn:Disconnect()
+    end
+    antiFlingConnections = {}
+
+    showNotification("Anti-Fling desactivado (colisiones restauradas)")
+end
+	pillAntiFling.MouseButton1Click:Connect(function()
+    local v = not getAntiFling()
+    setAntiFling(v)
+    if v then
+        startAntiFling()
+    else
+        stopAntiFling()
+    end
+end)
 	-- ── Animaciones ───────────────────────────────────────────
 makeSectionLabel(movPage, "Animations", 14)
 
