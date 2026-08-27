@@ -3368,9 +3368,7 @@ do
 end
 
 --|| ESP LOGIC ||--
---============================================================
--- ESP OPTIMIZADO - SIN LOOPS PESADOS
---============================================================
+
 local ESP = {
     active = {
         PL = false,
@@ -3410,15 +3408,29 @@ local function getTeamColor(plr)
     return ESP_COLORS.PL[plr.Team.Name] or ESP_COLORS.PL.Neutral
 end
 
+-- Detección mejorada de rol en MM2
+local function hasTool(parent, toolName)
+    if not parent then return false end
+    for _, child in ipairs(parent:GetChildren()) do
+        if child:IsA("Tool") then
+            local name = child.Name:lower()
+            if name == toolName:lower() or name:find(toolName:lower(), 1, true) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 local function getMM2Role(plr)
     if plr == player then return "Innocent" end
     local char = plr.Character
-    local bp = plr:FindFirstChild("Backpack")
+    local bp = plr:FindFirstChildOfClass("Backpack")
     
-    if (char and char:FindFirstChild("Knife")) or (bp and bp:FindFirstChild("Knife")) then
+    if hasTool(char, "Knife") or hasTool(bp, "Knife") then
         return "Murderer"
     end
-    if (char and char:FindFirstChild("Gun")) or (bp and bp:FindFirstChild("Gun")) then
+    if hasTool(char, "Gun") or hasTool(bp, "Gun") then
         return "Sheriff"
     end
     return "Innocent"
@@ -3431,22 +3443,18 @@ end
 
 -- === LIMPIAR HIGHLIGHTS DE UN JUGADOR ===
 local function clearHighlights(plr)
-    -- PL
     if ESP.highlights.PL[plr] then
         ESP.highlights.PL[plr]:Destroy()
         ESP.highlights.PL[plr] = nil
     end
-    -- MM2
     if ESP.highlights.MM2[plr] then
         ESP.highlights.MM2[plr]:Destroy()
         ESP.highlights.MM2[plr] = nil
     end
-    -- OG
     if ESP.highlights.OG[plr] then
         ESP.highlights.OG[plr]:Destroy()
         ESP.highlights.OG[plr] = nil
     end
-    -- NameTag
     if ESP.nameTags[plr] then
         if ESP.nameTags[plr].bb and ESP.nameTags[plr].bb.Parent then
             ESP.nameTags[plr].bb:Destroy()
@@ -3462,7 +3470,6 @@ local function applyESP(plr)
     local char = plr.Character
     if not char then return end
     
-    -- Solo aplicar si el jugador está vivo
     local hum = char:FindFirstChildOfClass("Humanoid")
     if not hum or hum.Health <= 0 then return end
     
@@ -3498,7 +3505,6 @@ local function applyESP(plr)
             h.Parent = char
             ESP.highlights.MM2[plr] = h
         else
-            -- Actualizar color si cambió de rol
             ESP.highlights.MM2[plr].FillColor = ESP_COLORS.MM2[role]
             ESP.highlights.MM2[plr].OutlineColor = ESP_COLORS.MM2[role]
         end
@@ -3561,7 +3567,6 @@ end
 local function refreshAllESP()
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= player then
-            -- Si el jugador no tiene personaje, limpiar sus highlights
             if not plr.Character then
                 clearHighlights(plr)
             else
@@ -3577,28 +3582,65 @@ local function setESP(mode, active)
     refreshAllESP()
 end
 
+-- === ACTUALIZADOR PERIÓDICO PARA MM2 ===
+local mm2PeriodicUpdateThread = nil
+local function startMM2PeriodicUpdate()
+    if mm2PeriodicUpdateThread then return end
+    mm2PeriodicUpdateThread = task.spawn(function()
+        while ESP.active.MM2 do
+            task.wait(5)
+            if ESP.active.MM2 then
+                refreshAllESP() -- Actualiza todos los ESP (incluido MM2)
+            end
+        end
+        mm2PeriodicUpdateThread = nil
+    end)
+end
+
+local function stopMM2PeriodicUpdate()
+    if mm2PeriodicUpdateThread then
+        task.cancel(mm2PeriodicUpdateThread)
+        mm2PeriodicUpdateThread = nil
+    end
+end
+
 -- === CONFIGURAR EVENTOS ===
+local function setupCharacterToolListeners(plr)
+    local char = plr.Character
+    if not char then return end
+    
+    local addedConn = char.ChildAdded:Connect(function(child)
+        if ESP.active.MM2 and child:IsA("Tool") then
+            task.wait(0.1)
+            applyESP(plr)
+        end
+    end)
+    local removedConn = char.ChildRemoved:Connect(function(child)
+        if ESP.active.MM2 and child:IsA("Tool") then
+            task.wait(0.1)
+            applyESP(plr)
+        end
+    end)
+    table.insert(ESP.connections, addedConn)
+    table.insert(ESP.connections, removedConn)
+end
+
 local function setupPlayerEvents(plr)
     if plr == player then return end
     
-    -- Cuando el personaje cambia (muerte/respawn)
-    local charConn
-    charConn = plr.CharacterAdded:Connect(function(char)
-        task.wait(0.3) -- Esperar a que cargue
-        -- Limpiar highlights viejos
+    local charConn = plr.CharacterAdded:Connect(function(char)
+        task.wait(0.3)
         clearHighlights(plr)
-        -- Aplicar nuevos
         applyESP(plr)
+        setupCharacterToolListeners(plr)  -- Conectar listeners para el nuevo personaje
     end)
     table.insert(ESP.connections, charConn)
     
-    -- Cuando el personaje es removido (muerte)
     local charRemovingConn = plr.CharacterRemoving:Connect(function()
         clearHighlights(plr)
     end)
     table.insert(ESP.connections, charRemovingConn)
     
-    -- Cuando cambia de equipo (PL)
     if plr:FindFirstChild("Team") then
         local teamConn = plr:GetPropertyChangedSignal("Team"):Connect(function()
             if ESP.active.PL then
@@ -3608,7 +3650,28 @@ local function setupPlayerEvents(plr)
         table.insert(ESP.connections, teamConn)
     end
     
-    -- Cuando el jugador sale
+    local backpack = plr:FindFirstChildOfClass("Backpack")
+    if backpack then
+        local backpackAdded = backpack.ChildAdded:Connect(function(child)
+            if ESP.active.MM2 and child:IsA("Tool") then
+                task.wait(0.1)
+                applyESP(plr)
+            end
+        end)
+        local backpackRemoved = backpack.ChildRemoved:Connect(function(child)
+            if ESP.active.MM2 and child:IsA("Tool") then
+                task.wait(0.1)
+                applyESP(plr)
+            end
+        end)
+        table.insert(ESP.connections, backpackAdded)
+        table.insert(ESP.connections, backpackRemoved)
+    end
+    
+    if plr.Character then
+        setupCharacterToolListeners(plr)
+    end
+    
     local removeConn = plr.AncestryChanged:Connect(function()
         if not plr.Parent then
             clearHighlights(plr)
@@ -3634,7 +3697,6 @@ local replicatedStorage = game:GetService("ReplicatedStorage")
 local roundStartRemote = replicatedStorage:FindFirstChild("Remotes") and replicatedStorage.Remotes:FindFirstChild("Gameplay") and replicatedStorage.Remotes.Gameplay:FindFirstChild("RoundStarted")
 if roundStartRemote then
     local roundStartConn = roundStartRemote.OnClientEvent:Connect(function()
-        -- Actualizar roles de todos los jugadores (especialmente MM2)
         refreshAllESP()
     end)
     table.insert(ESP.connections, roundStartConn)
@@ -3675,10 +3737,12 @@ end
 
 function enableESP_MM2()
     setESP("MM2", true)
+    startMM2PeriodicUpdate()
 end
 
 function disableESP_MM2()
     setESP("MM2", false)
+    stopMM2PeriodicUpdate()
 end
 
 function enableESP_OG()
@@ -3711,6 +3775,8 @@ end
 
 -- === LIMPIEZA AL CERRAR GUI ===
 local function cleanupESP()
+    stopMM2PeriodicUpdate()
+    
     for _, conn in ipairs(ESP.connections) do
         conn:Disconnect()
     end
@@ -3726,7 +3792,6 @@ local function cleanupESP()
     end
 end
 
--- Guardar referencia para limpiar
 HHBFuncs.cleanupESP = cleanupESP
 ----|| toggle ||---
 local function openGui()
