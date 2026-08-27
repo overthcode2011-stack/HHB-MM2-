@@ -269,9 +269,9 @@ local function obtainSheriffGun()
     local originalCF = hrp.CFrame
 
     -- Calcular una posición al lado del arma (desplazada en X y Z)
-    local offset = Vector3.new(2, 0, 2)  -- 2 studs en X y 2 en Z
+    local offset = Vector3.new(2, 0, -2)  -- 2 studs en X y 2 en Z
     -- Asegurar que el jugador quede a la altura correcta (suelo + 2 studs)
-    local targetY = gunCFrame.Y + 2  -- ajusta según necesites
+    local targetY = gunCFrame.Y - 2  -- ajusta según necesites
     local targetPos = gunCFrame.Position + offset
     targetPos = Vector3.new(targetPos.X, targetY, targetPos.Z)
 
@@ -1238,7 +1238,7 @@ local function obtainSheriffGun()
     local originalPos = gunDrop.Position
 
     -- 3. Mover el arma a la posición del HRP (con CFrame para mayor precisión)
-    local targetCFrame = CFrame.new(hrp.Position + Vector3.new(0, 3, 0))
+    local targetCFrame = CFrame.new(hrp.Position + Vector3.new(0, -1, 0))
     gunDrop.CFrame = targetCFrame
     gunDrop.Velocity = Vector3.zero
     gunDrop.RotVelocity = Vector3.zero
@@ -1833,7 +1833,7 @@ do
 			local noPlayers = Instance.new("TextLabel")
 			noPlayers.Size = UDim2.new(1,0,0,44)
 			noPlayers.BackgroundTransparency = 1
-			noPlayers.Text = "There's not Other players in this server"
+			noPlayers.Text = "There are not players in this server"
 			noPlayers.TextColor3 = T().subtext
 			noPlayers.Font = Enum.Font.Gotham
 			noPlayers.TextSize = 13
@@ -2151,33 +2151,50 @@ do
 		end
 	end)
 
-	pillAntiFling.MouseButton1Click:Connect(function()
-		local v = not getAntiFling(); setAntiFling(v)
-		if v then
-			antiFlingLastPos = nil
-			antiFlingConn = RunService.Heartbeat:Connect(function()
-				local hrp = getHRP(); if not hrp then return end
-				local vel = hrp.AssemblyLinearVelocity
-				local speed = vel.Magnitude
-				local curPos = hrp.Position
-				if speed > ANTI_FLING_MAX_VEL then
-					hrp.AssemblyLinearVelocity = Vector3.zero
-					if antiFlingLastPos then
-						hrp.CFrame = CFrame.new(antiFlingLastPos) * (hrp.CFrame - hrp.CFrame.Position)
-					end
-				elseif antiFlingLastPos and (curPos - antiFlingLastPos).Magnitude > ANTI_FLING_MAX_DELTA then
-					hrp.CFrame = CFrame.new(antiFlingLastPos) * (hrp.CFrame - hrp.CFrame.Position)
-					hrp.AssemblyLinearVelocity = Vector3.zero
-				else
-					antiFlingLastPos = curPos
-				end
-			end)
-		else
-			if antiFlingConn then antiFlingConn:Disconnect(); antiFlingConn = nil end
-			antiFlingLastPos = nil
-		end
-	end)
+	-- Variables para el Anti-Fling mejorado
+local antiFlingConn = nil
+local antiFlingLastPos = nil
+local antiFlingLastTime = 0
+local ANTI_FLING_MAX_VEL = 250  -- Velocidad máxima permitida
+local ANTI_FLING_CHECK_INTERVAL = 0.1  -- Cada cuánto revisar
 
+-- Función para activar el Anti-Fling
+local function startAntiFling()
+    if antiFlingConn then return end
+    
+    antiFlingLastPos = nil
+    antiFlingLastTime = 0
+    
+    antiFlingConn = RunService.Heartbeat:Connect(function()
+        local hrp = getHRP()
+        if not hrp then return end
+        
+        local currentPos = hrp.Position
+        local velocity = hrp.AssemblyLinearVelocity
+        local speed = velocity.Magnitude
+        
+        -- Si la velocidad es muy alta, te están flingeando
+        if speed > ANTI_FLING_MAX_VEL then
+            -- Si tenemos una posición anterior guardada, teletransportar de vuelta
+            if antiFlingLastPos then
+                hrp.CFrame = CFrame.new(antiFlingLastPos) * (hrp.CFrame - hrp.CFrame.Position)
+                hrp.AssemblyLinearVelocity = Vector3.zero
+            end
+        else
+            -- Guardar la posición actual solo si la velocidad es normal
+            antiFlingLastPos = currentPos
+        end
+    end)
+end
+
+-- Función para desactivar el Anti-Fling
+local function stopAntiFling()
+    if antiFlingConn then
+        antiFlingConn:Disconnect()
+        antiFlingConn = nil
+    end
+    antiFlingLastPos = nil
+end
 	
 	-- ── Animaciones ───────────────────────────────────────────
 makeSectionLabel(movPage, "Animations", 14)
