@@ -1177,17 +1177,58 @@ local function obtainSheriffGun()
     if not char then return false end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return false end
-    local gunCFrame = findGunDropCFrame()
-    if not gunCFrame then return false end
-    local originalCF = hrp.CFrame
-    hrp.CFrame = gunCFrame + Vector3.new(0, 5, 0)
-    task.wait(0.5)
-    hrp.CFrame = originalCF
+
+    local gunDrop = nil
+    for _, map in ipairs(workspace:GetChildren()) do
+        if map:IsA("Model") and map.Name:find("Map") then
+            gunDrop = map:FindFirstChild("GunDrop", true)
+            if gunDrop and gunDrop:IsA("BasePart") then
+                break
+            end
+        end
+    end
+    if not gunDrop then
+        gunDrop = workspace:FindFirstChild("GunDrop", true)
+    end
+    if not gunDrop or not gunDrop:IsA("BasePart") then
+        return false
+    end
+
+    -- 2. Guardar la posición original (por si queremos restaurarla)
+    local originalPos = gunDrop.Position
+
+    -- 3. Mover el arma a la posición del HRP (un poco más arriba para que caiga)
+    gunDrop.Position = hrp.Position + Vector3.new(0, 4, 0)
+    gunDrop.Velocity = Vector3.zero
+    gunDrop.RotVelocity = Vector3.zero
+
+    -- 4. Si tiene ClickDetector, activarlo (más fiable que solo colisión)
+    local detector = gunDrop:FindFirstChild("ClickDetector")
+    if detector and detector:IsA("ClickDetector") then
+        detector:FireClick(player)
+    end
+
+    -- 5. Esperar un momento para que el juego procese la recogida
+    task.wait(0.3)
+
+    -- 6. (Opcional) Restaurar el arma a su posición original si no fue recogida
+    if gunDrop and gunDrop.Parent then
+        gunDrop.Position = originalPos
+    end
+
+    -- 7. Verificar si ahora tenemos el arma en el inventario
     local bp = player:FindFirstChild("Backpack")
-    if bp and bp:FindFirstChild("Gun") then return true end
+    if bp and bp:FindFirstChild("Gun") then
+        return true
+    end
+
+    -- También podría estar en el character (si la equipa automáticamente)
+    if char:FindFirstChild("Gun") then
+        return true
+    end
+
     return false
 end
-
 -------------||  Page waypoints [2] ||----------------
 local wpPage = newPage("Waypoints")
 do
