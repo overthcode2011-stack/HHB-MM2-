@@ -2062,7 +2062,7 @@ do
 
 	
 	-- ── Animaciones ───────────────────────────────────────────
-makeSectionLabel(movPage, "Animations", 9)
+makeSectionLabel(movPage, "Animations", 14)
 
 local laughBtn = Instance.new("TextButton")
 laughBtn.LayoutOrder = 10
