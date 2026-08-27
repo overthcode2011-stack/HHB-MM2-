@@ -3588,7 +3588,7 @@ local function startMM2PeriodicUpdate()
     if mm2PeriodicUpdateThread then return end
     mm2PeriodicUpdateThread = task.spawn(function()
         while ESP.active.MM2 do
-            task.wait(5)
+            task.wait(1)
             if ESP.active.MM2 then
                 refreshAllESP() -- Actualiza todos los ESP (incluido MM2)
             end
