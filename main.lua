@@ -2297,7 +2297,7 @@ do
 	table.insert(reg.subtexts, aimbotStatusLbl)
 
 	makeInfoCard(aimbotPage,
-		"• Lock-On Asesino: You justo can use in MM2.\n• Aimbot general is for any player",
+		"• Lock-On Asesino: You just can use in MM2.\n• Aimbot general is for any player",
 		10)
 
 
@@ -3368,6 +3368,9 @@ do
 end
 
 --|| ESP LOGIC ||--
+--============================================================
+-- ESP OPTIMIZADO - SIN LOOPS PESADOS
+--============================================================
 local ESP = {
     active = {
         PL = false,
@@ -3385,7 +3388,7 @@ local ESP = {
     connections = {}
 }
 
--- config
+-- === CONFIGURACIÓN ===
 local ESP_COLORS = {
     PL = {
         Criminals = Color3.fromRGB(255, 60, 60),
@@ -3554,6 +3557,7 @@ local function applyESP(plr)
     end
 end
 
+-- === ACTUALIZAR TODOS LOS JUGADORES ===
 local function refreshAllESP()
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= player then
@@ -3588,6 +3592,12 @@ local function setupPlayerEvents(plr)
     end)
     table.insert(ESP.connections, charConn)
     
+    -- Cuando el personaje es removido (muerte)
+    local charRemovingConn = plr.CharacterRemoving:Connect(function()
+        clearHighlights(plr)
+    end)
+    table.insert(ESP.connections, charRemovingConn)
+    
     -- Cuando cambia de equipo (PL)
     if plr:FindFirstChild("Team") then
         local teamConn = plr:GetPropertyChangedSignal("Team"):Connect(function()
@@ -3618,6 +3628,17 @@ end
 Players.PlayerAdded:Connect(function(plr)
     setupPlayerEvents(plr)
 end)
+
+-- === ESCUCHAR RoundStarted ===
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local roundStartRemote = replicatedStorage:FindFirstChild("Remotes") and replicatedStorage.Remotes:FindFirstChild("Gameplay") and replicatedStorage.Remotes.Gameplay:FindFirstChild("RoundStarted")
+if roundStartRemote then
+    local roundStartConn = roundStartRemote.OnClientEvent:Connect(function()
+        -- Actualizar roles de todos los jugadores (especialmente MM2)
+        refreshAllESP()
+    end)
+    table.insert(ESP.connections, roundStartConn)
+end
 
 -- === ACTUALIZAR DISTANCIAS EN NAMETAGS ===
 local nameTagUpdater
@@ -3707,7 +3728,6 @@ end
 
 -- Guardar referencia para limpiar
 HHBFuncs.cleanupESP = cleanupESP
-
 ----|| toggle ||---
 local function openGui()
     panel.Visible = true
