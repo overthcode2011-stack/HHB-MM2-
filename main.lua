@@ -513,16 +513,6 @@ styleCorner(panel, UDim.new(0, 18))
 styleStroke(panel, 0.65)
 table.insert(reg.panels, panel)
 
-local shadow = Instance.new("Frame")
-shadow.Size = UDim2.new(1, 28, 1, 28)
-shadow.Position = UDim2.new(0, -14, 0, 14)
-shadow.BackgroundColor3 = Color3.new(0,0,0)
-shadow.BackgroundTransparency = 0.5
-shadow.BorderSizePixel = 0
-shadow.ZIndex = panel.ZIndex - 1
-shadow.Parent = panel
-styleCorner(shadow, UDim.new(0, 22))
-
 -------------||  header ||----------------
 local header = Instance.new("Frame")
 header.Size = UDim2.new(1, 0, 0, 58)
