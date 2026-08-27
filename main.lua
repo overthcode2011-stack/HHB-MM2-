@@ -2065,7 +2065,7 @@ do
 makeSectionLabel(movPage, "Animations", 14)
 
 local laughBtn = Instance.new("TextButton")
-laughBtn.LayoutOrder = 10
+laughBtn.LayoutOrder = 15
 laughBtn.Size = UDim2.new(1,0,0,50)
 laughBtn.BackgroundColor3 = T().bg
 laughBtn.BackgroundTransparency = CARD_TRANSPARENCY
