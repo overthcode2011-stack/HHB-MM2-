@@ -8,7 +8,7 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
 local Player = Players.LocalPlayer
-local CoreGui = game:GetService("CoreGui")
+local playerGui = Player:WaitForChild("PlayerGui")
 -- Sistema de temas propio (fallback si no hay Happy Hub)
 local THEMES = {
 	Dark = {
@@ -117,7 +117,7 @@ screenGui.Name = "CoinCollectorHH"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.DisplayOrder = 999
-screenGui.Parent = CoreGui
+screenGui.Parent = playerGui
 
 -- Panel principal (rediseñado)
 local panel = Instance.new("Frame")
