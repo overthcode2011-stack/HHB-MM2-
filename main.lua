@@ -2082,11 +2082,23 @@ table.insert(reg.panels, laughBtn)
 table.insert(reg.accentTexts, laughBtn)
 table.insert(reg.accentStrokes, laughStroke)
 
-	
 laughBtn.MouseButton1Click:Connect(function()
-if TextChannels and TextChannels:FindFirstChild("RBXGeneral") then
-    TextChannels.RBXGeneral:SendAsync("/e laugh")
-end
+    local tcs = game:GetService("TextChatService")
+    if tcs.ChatVersion == Enum.ChatVersion.TextChatService then
+        local channel = tcs.TextChannels:FindFirstChild("RBXGeneral")
+        if channel then
+            channel:SendAsync("/e laugh")
+        end
+    else
+        local event = game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents")
+        if event then
+            local sayReq = event:FindFirstChild("SayMessageRequest")
+            if sayReq then
+                sayReq:FireServer("/e laugh", "All")
+            end
+        end
+    end
+end)
 
 
 	makeSectionLabel(movPage, "Reset Character", 18)
