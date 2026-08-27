@@ -1174,59 +1174,115 @@ end
 
 local function obtainSheriffGun()
     local char = player.Character
-    if not char then return false end
+    if not char then
+        warn("[Pickup] Character is nil")
+        return false
+    end
     local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return false end
+    if not hrp then
+        warn("[Pickup] HumanoidRootPart not found")
+        return false
+    end
 
+    -- 1. Buscar el GunDrop en TODO workspace (sin restricciones de nombre)
     local gunDrop = nil
-    for _, map in ipairs(workspace:GetChildren()) do
-        if map:IsA("Model") and map.Name:find("Map") then
-            gunDrop = map:FindFirstChild("GunDrop", true)
-            if gunDrop and gunDrop:IsA("BasePart") then
+    -- Buscar en workspace directamente
+    for _, obj in ipairs(workspace:GetChildren()) do
+        if obj:IsA("BasePart") and obj.Name:lower():find("gundrop") then
+            gunDrop = obj
+            break
+        end
+        -- Si es un modelo, buscar dentro
+        if obj:IsA("Model") then
+            local found = obj:FindFirstChild("GunDrop", true)
+            if found and found:IsA("BasePart") then
+                gunDrop = found
                 break
             end
         end
     end
+    -- Si no se encontró, buscar en todo el workspace sin filtro
     if not gunDrop then
         gunDrop = workspace:FindFirstChild("GunDrop", true)
     end
+
     if not gunDrop or not gunDrop:IsA("BasePart") then
+        warn("[Pickup] GunDrop not found in workspace")
         return false
     end
 
-    -- 2. Guardar la posición original (por si queremos restaurarla)
+    print("[Pickup] GunDrop encontrado:", gunDrop:GetFullName())
+
+    -- 2. Guardar posición original
     local originalPos = gunDrop.Position
 
-    -- 3. Mover el arma a la posición del HRP (un poco más arriba para que caiga)
-    gunDrop.Position = hrp.Position + Vector3.new(0, 4, 0)
+    -- 3. Mover el arma a la posición del HRP (con CFrame para mayor precisión)
+    local targetCFrame = CFrame.new(hrp.Position + Vector3.new(0, 3, 0))
+    gunDrop.CFrame = targetCFrame
     gunDrop.Velocity = Vector3.zero
     gunDrop.RotVelocity = Vector3.zero
 
-    -- 4. Si tiene ClickDetector, activarlo (más fiable que solo colisión)
+    print("[Pickup] Nueva posición asignada:", gunDrop.Position)
+
+    -- 4. Forzar activación de Pickup (ClickDetector / ProximityPrompt / Touched)
+    local success = false
+
+    -- 4a. ClickDetector
     local detector = gunDrop:FindFirstChild("ClickDetector")
     if detector and detector:IsA("ClickDetector") then
         detector:FireClick(player)
+        print("[Pickup] ClickDetector activado")
+        success = true
     end
 
-    -- 5. Esperar un momento para que el juego procese la recogida
-    task.wait(0.3)
+    -- 4b. ProximityPrompt
+    local prompt = gunDrop:FindFirstChild("ProximityPrompt")
+    if prompt and prompt:IsA("ProximityPrompt") then
+        prompt:HoldEnd()
+        print("[Pickup] ProximityPrompt activado")
+        success = true
+    end
 
-    -- 6. (Opcional) Restaurar el arma a su posición original si no fue recogida
+    -- 4c. Si no hay detector, esperamos a que la colisión lo recoja
+    if not success then
+        print("[Pickup] Sin ClickDetector ni ProximityPrompt, esperando colisión...")
+        -- Esperar un poco para que la física detecte la colisión
+        task.wait(0.5)
+    end
+
+    -- 5. Restaurar la posición original (para no dejar el arma en el suelo)
+    --    pero solo si el arma sigue existiendo (no fue recogida)
+    task.wait(0.2)
     if gunDrop and gunDrop.Parent then
-        gunDrop.Position = originalPos
+        gunDrop.CFrame = CFrame.new(originalPos)
+        print("[Pickup] Arma restaurada a su posición original")
     end
 
-    -- 7. Verificar si ahora tenemos el arma en el inventario
+    -- 6. Verificar si conseguimos el arma en el inventario
     local bp = player:FindFirstChild("Backpack")
     if bp and bp:FindFirstChild("Gun") then
+        print("[Pickup] Arma encontrada en Backpack")
         return true
     end
-
-    -- También podría estar en el character (si la equipa automáticamente)
     if char:FindFirstChild("Gun") then
+        print("[Pickup] Arma encontrada en Character")
         return true
     end
 
+    -- Verificar otros nombres comunes
+    local commonGunNames = {"Gun", "SheriffGun", "Pistol", "Revolver", "Weapon"}
+    for _, name in ipairs(commonGunNames) do
+        if bp and bp:FindFirstChild(name) then
+            print("[Pickup] Arma encontrada en Backpack con nombre:", name)
+            return true
+        end
+        if char:FindFirstChild(name) then
+            print("[Pickup] Arma encontrada en Character con nombre:", name)
+            return true
+        end
+    end
+
+    warn("[Pickup] No se encontró el arma después del intento")
     return false
 end
 -------------||  Page waypoints [2] ||----------------
