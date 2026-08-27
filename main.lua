@@ -3,6 +3,8 @@ local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local TextChatService = game:GetService("TextChatService")
+local TextChannels = TextChatService:FindFirstChild("TextChannels")
 
 local player = Players.LocalPlayer
 --|| Themes ||--
@@ -2059,89 +2061,32 @@ do
 	end)
 
 	
-	makeSectionLabel(movPage, "Animations or dances", 14)
+	-- ── Animaciones ───────────────────────────────────────────
+makeSectionLabel(movPage, "Animations", 9)
 
-	local animTracks = {
-		hide = nil,
-		fake = nil,
-		take = nil,
-	}
+local laughBtn = Instance.new("TextButton")
+laughBtn.LayoutOrder = 10
+laughBtn.Size = UDim2.new(1,0,0,50)
+laughBtn.BackgroundColor3 = T().bg
+laughBtn.BackgroundTransparency = CARD_TRANSPARENCY
+laughBtn.Text = " /e laugh"
+laughBtn.TextColor3 = T().accent
+laughBtn.TextSize = 15
+laughBtn.Font = Enum.Font.GothamSemibold
+laughBtn.BorderSizePixel = 0
+laughBtn.AutoButtonColor = true
+laughBtn.Parent = movPage
+styleCorner(laughBtn, UDim.new(0,10))
+local laughStroke = styleStroke(laughBtn, 0.82, T().accent)
+table.insert(reg.panels, laughBtn)
+table.insert(reg.accentTexts, laughBtn)
+table.insert(reg.accentStrokes, laughStroke)
 
-	local function playAnimById(animId)
-		local hum = getHumanoid()
-		if not hum then return nil end
-		local anim = Instance.new("Animation")
-		anim.AnimationId = "rbxassetid://" .. animId
-		local track = hum:LoadAnimation(anim)
-		track:Play()
-		game:GetService("Debris"):AddItem(anim, 5)
-		return track
-	end
-
-	-- Toggle 1: Hide me
-	local pillHide, setHide, getHide = makeToggleRow(movPage, "Hide me", 15)
-	pillHide.MouseButton1Click:Connect(function()
-		local v = not getHide()
-		setHide(v)
-		if v then
-			if animTracks.hide then animTracks.hide:Stop() end
-			animTracks.hide = playAnimById("94292601332790")
-		else
-			if animTracks.hide then
-				animTracks.hide:Stop()
-				animTracks.hide = nil
-			end
-		end
-	end)
-
-	-- Toggle 2: Fake dead mm2
-	local pillFake, setFake, getFake = makeToggleRow(movPage, "Fake dead mm2", 16)
-	pillFake.MouseButton1Click:Connect(function()
-		local v = not getFake()
-		setFake(v)
-		if v then
-			if animTracks.fake then animTracks.fake:Stop() end
-			animTracks.fake = playAnimById("133176230287726")
-		else
-			if animTracks.fake then
-				animTracks.fake:Stop()
-				animTracks.fake = nil
-			end
-		end
-	end)
-
-	-- Toggle 3: Take the L
-	local pillTake, setTake, getTake = makeToggleRow(movPage, "Take the L", 17)
-	pillTake.MouseButton1Click:Connect(function()
-		local v = not getTake()
-		setTake(v)
-		if v then
-			if animTracks.take then animTracks.take:Stop() end
-			animTracks.take = playAnimById("86830387246209")
-		else
-			if animTracks.take then
-				animTracks.take:Stop()
-				animTracks.take = nil
-			end
-		end
-	end)
-
-	-- Reactivar animaciones al respawn
-	player.CharacterAdded:Connect(function()
-		task.wait(0.5)
-		if getHide() then
-			if animTracks.hide then animTracks.hide:Stop() end
-			animTracks.hide = playAnimById("94292601332790")
-		end
-		if getFake() then
-			if animTracks.fake then animTracks.fake:Stop() end
-			animTracks.fake = playAnimById("133176230287726")
-		end
-		if getTake() then
-			if animTracks.take then animTracks.take:Stop() end
-			animTracks.take = playAnimById("86830387246209")
-		end
-	end)
+	
+laughBtn.MouseButton1Click:Connect(function()
+if TextChannels and TextChannels:FindFirstChild("RBXGeneral") then
+    TextChannels.RBXGeneral:SendAsync("/e laugh")
+end
 
 
 	makeSectionLabel(movPage, "Reset Character", 18)
