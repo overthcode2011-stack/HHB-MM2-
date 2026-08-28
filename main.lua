@@ -174,7 +174,7 @@ local function applyTheme()
 end
 
 ---------|| Global config ||----------
-local PANEL_TRANSPARENCY = 0.75
+local PANEL_TRANSPARENCY = 0.45
 local ICON_ID            = "rbxassetid://104348663064077"
 local CLOSE_ICON_ID      = "rbxassetid://115558082558028"
 local ADD_WP_ICON_ID     = "rbxassetid://117786081881229"
@@ -500,10 +500,10 @@ screenGui.Parent = game:GetService("CoreGui")
 
 local panel = Instance.new("Frame")
 panel.Name = "MainPanel"
-panel.Size = UDim2.new(0.4, 0, 0.55, 0)
+panel.Size = UDim2.new(0.5, 0, 0.6, 0)
 panel.Position = UDim2.new(0.5, 0, 0.5, 0)
 panel.BackgroundColor3 = T().bg
-panel.BackgroundTransparency = 0.6
+panel.BackgroundTransparency = 0.45
 panel.BorderSizePixel = 0
 panel.AnchorPoint = Vector2.new(0.5, 0.5)
 panel.ClipsDescendants = true
@@ -578,7 +578,7 @@ minimizeBtn.AutoButtonColor = false
 minimizeBtn.Parent = header
 
 local isMinimized = false
-local OPEN_SIZE = UDim2.new(0.4, 0, 0.55, 0)
+local OPEN_SIZE = UDim2.new(0.5, 0, 0.6, 0)
 local CLOSED_SIZE = UDim2.new(0.4, 0, 0, 58)
 local originalTransparency = panel.BackgroundTransparency  -- guardamos 0.6
 
