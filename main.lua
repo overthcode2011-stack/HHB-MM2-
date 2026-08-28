@@ -500,7 +500,7 @@ screenGui.Parent = game:GetService("CoreGui")
 
 local panel = Instance.new("Frame")
 panel.Name = "MainPanel"
-panel.Size = UDim2.new(0.6, 0, 0.6, 0)
+panel.Size = UDim2.new(0.6, 0, 0.8, 0)
 panel.Position = UDim2.new(0.5, 0, 0.5, 0)
 panel.BackgroundColor3 = T().bg
 panel.BackgroundTransparency = 0.45
