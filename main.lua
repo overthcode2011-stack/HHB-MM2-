@@ -942,7 +942,7 @@ do
 	
 	makeSectionLabel(homePage, "Music", 2)
 
-	local pillMusic, setMusic, getMusic = makeToggleRow(homePage, "HR - WASSA", 3)
+	local pillMusic, setMusic, getMusic = makeToggleRow(homePage, "Holy war funk clip", 3)
 
 	local musicSound = nil
 	local musicActive = false
@@ -953,7 +953,7 @@ do
 			musicSound = nil
 		end
 		musicSound = Instance.new("Sound")
-		musicSound.SoundId = "rbxassetid://17422156627"
+		musicSound.SoundId = "rbxassetid://114863468634575"
 		musicSound.Volume = 10
 		musicSound.Looped = true
 		musicSound.Parent = game:GetService("SoundService")
@@ -975,7 +975,7 @@ do
 		setMusic(v)
 		if v then
 			playMusic()
-			showNotification("Playing: EYUHH! - HR")
+			showNotification("Playing: Holy war funk")
 		else
 			stopMusic()
 			showNotification("Music stopped")
