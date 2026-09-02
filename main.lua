@@ -498,9 +498,21 @@ screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.DisplayOrder = 999   
 screenGui.Parent = game:GetService("CoreGui")
 
+-- Detectar si es móvil
+local isMobile = UserInputService.TouchEnabled
+
+-- Asignar el tamaño correcto
+local panelSize
+if isMobile then
+    panelSize = UDim2.new(0.6, 0, 0.8, 0)  -- Tamaño para móvil
+else
+    panelSize = UDim2.new(0.4, 0, 0.55, 0) -- Tamaño para PC
+end
+
+-- Crear el panel con el tamaño elegido
 local panel = Instance.new("Frame")
 panel.Name = "MainPanel"
-panel.Size = UDim2.new(0.4, 0, 0.55, 0)
+panel.Size = panelSize
 panel.Position = UDim2.new(0.5, 0, 0.5, 0)
 panel.BackgroundColor3 = T().bg
 panel.BackgroundTransparency = 0.45
