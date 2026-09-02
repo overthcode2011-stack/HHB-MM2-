@@ -579,10 +579,6 @@ minimizeBtn.BorderSizePixel = 0
 minimizeBtn.AutoButtonColor = false
 minimizeBtn.Parent = header
 
-local isMobile = UserInputService.TouchEnabled
-local PANEL_SIZE = isMobile and UDim2.new(0.6, 0, 0.8, 0) or UDim2.new(0.4, 0, 0.55, 0)
-local PANEL_TRANSPARENCY = 0.45
-
 local isMinimized = false
 local OPEN_SIZE = PANEL_SIZE  
 local CLOSED_SIZE = UDim2.new(0.4, 0, 0, 58)
@@ -597,6 +593,7 @@ minimizeBtn.MouseButton1Click:Connect(function()
     TweenService:Create(panel, tweenInfo, {Size = targetSize}):Play()
     TweenService:Create(panel, tweenInfo, {BackgroundTransparency = targetTransparency}):Play()
 end)
+
 -- DRAG
 local dragging, dragInput, dragStart, startPos = false, nil, nil, nil
 header.InputBegan:Connect(function(input)
@@ -3990,6 +3987,7 @@ HHBFuncs.cleanupESP = cleanupESP
 local function openGui()
     panel.Visible = true
     panel.BackgroundTransparency = PANEL_TRANSPARENCY
+    panel.Size = PANEL_SIZE 
 end
 
 local function closeGui()
