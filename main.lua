@@ -589,10 +589,14 @@ minimizeBtn.BorderSizePixel = 0
 minimizeBtn.AutoButtonColor = false
 minimizeBtn.Parent = header
 
+local isMobile = UserInputService.TouchEnabled
+local PANEL_SIZE = isMobile and UDim2.new(0.6, 0, 0.8, 0) or UDim2.new(0.4, 0, 0.55, 0)
+local PANEL_TRANSPARENCY = 0.45
+
 local isMinimized = false
-local OPEN_SIZE = UDim2.new(0.4, 0, 0.55, 0)
+local OPEN_SIZE = PANEL_SIZE  
 local CLOSED_SIZE = UDim2.new(0.4, 0, 0, 58)
-local originalTransparency = panel.BackgroundTransparency  -- guardamos 0.6
+local originalTransparency = PANEL_TRANSPARENCY 
 
 minimizeBtn.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
@@ -600,12 +604,9 @@ minimizeBtn.MouseButton1Click:Connect(function()
     local targetSize = isMinimized and CLOSED_SIZE or OPEN_SIZE
     local tweenInfo = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
-    -- Animación de tamaño
     TweenService:Create(panel, tweenInfo, {Size = targetSize}):Play()
-    -- Animación de transparencia (desvanecimiento)
     TweenService:Create(panel, tweenInfo, {BackgroundTransparency = targetTransparency}):Play()
 end)
-
 -- DRAG
 local dragging, dragInput, dragStart, startPos = false, nil, nil, nil
 header.InputBegan:Connect(function(input)
@@ -631,8 +632,15 @@ end)
 
 -------------||  side bar and pages ||----------------
 local sidebar = Instance.new("ScrollingFrame")
-sidebar.Size = UDim2.new(0, 138, 1, -130)
-sidebar.Position = UDim2.new(0, 8, 0, 62)
+if isMobile then
+    sidebar.Size = UDim2.new(0, 110, 1, -130) 
+    contentArea.Position = UDim2.new(0, 126, 0, 62) 
+    contentArea.Size = UDim2.new(1, -134, 1, -68)
+else
+    sidebar.Size = UDim2.new(0, 138, 1, -130)
+    contentArea.Position = UDim2.new(0, 154, 0, 62)
+    contentArea.Size = UDim2.new(1, -162, 1, -68)
+end
 sidebar.BackgroundColor3 = T().bg
 sidebar.BackgroundTransparency = 0.45
 sidebar.BorderSizePixel = 0
