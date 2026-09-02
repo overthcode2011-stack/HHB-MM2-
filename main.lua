@@ -619,26 +619,16 @@ end)
 
 -------------||  side bar and pages ||----------------
 local contentArea = Instance.new("Frame")
+contentArea.Size = UDim2.new(1, -162, 1, -68)
+contentArea.Position = UDim2.new(0, 154, 0, 62)
 contentArea.BackgroundTransparency = 1
 contentArea.BorderSizePixel = 0
 contentArea.Parent = panel
 
 
-if isMobile then
-    contentArea.Size = UDim2.new(1, -134, 1, -68)
-    contentArea.Position = UDim2.new(0, 126, 0, 62)
-else
-    contentArea.Size = UDim2.new(1, -162, 1, -68)
-    contentArea.Position = UDim2.new(0, 154, 0, 62)
-end
-
-
 local sidebar = Instance.new("ScrollingFrame")
-if isMobile then
-    sidebar.Size = UDim2.new(0, 110, 1, -130)
-else
-    sidebar.Size = UDim2.new(0, 138, 1, -130)
-end
+sidebar.Size = UDim2.new(0, 138, 1, -130)
+sidebar.Position = UDim2.new(0, 8, 0, 62)
 sidebar.BackgroundColor3 = T().bg
 sidebar.BackgroundTransparency = 0.45
 sidebar.BorderSizePixel = 0
@@ -653,6 +643,11 @@ styleStroke(sidebar, 0.80)
 stylePadding(sidebar, 8,8,6,6)
 table.insert(reg.panels, sidebar)
 table.insert(reg.scrollBars, sidebar)
+
+local sidebarLayout = Instance.new("UIListLayout")
+sidebarLayout.Padding = UDim.new(0,6)
+sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+sidebarLayout.Parent = sidebar
 
 local tabDefs = {"Home","Waypoints","Players","ESP","Movement","Aimbot","Avatar","Scripts","Misc","Settings",}
 local tabBtns = {}
