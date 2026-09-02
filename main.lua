@@ -956,7 +956,7 @@ do
 		musicSound.SoundId = "rbxassetid://17422156627"
 		musicSound.Volume = 10
 		musicSound.Looped = true
-		musicSound.Parent = playerGui
+		musicSound.Parent = game:GetService("SoundService")
 		musicSound:Play()
 		musicActive = true
 	end
