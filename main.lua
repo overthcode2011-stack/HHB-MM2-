@@ -175,6 +175,7 @@ end
 
 ---------|| Global config ||----------
 local PANEL_TRANSPARENCY = 0.45
+local PANEL_SIZE = isMobile and UDim2.new(0.6, 0, 0.8, 0) or UDim2.new(0.4, 0, 0.55, 0)
 local ICON_ID            = "rbxassetid://104348663064077"
 local CLOSE_ICON_ID      = "rbxassetid://115558082558028"
 local ADD_WP_ICON_ID     = "rbxassetid://117786081881229"
@@ -498,21 +499,10 @@ screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.DisplayOrder = 999   
 screenGui.Parent = game:GetService("CoreGui")
 
--- Detectar si es móvil
-local isMobile = UserInputService.TouchEnabled
-
--- Asignar el tamaño correcto
-local panelSize
-if isMobile then
-    panelSize = UDim2.new(0.6, 0, 0.8, 0)  -- Tamaño para móvil
-else
-    panelSize = UDim2.new(0.4, 0, 0.55, 0) -- Tamaño para PC
-end
-
 -- Crear el panel con el tamaño elegido
 local panel = Instance.new("Frame")
 panel.Name = "MainPanel"
-panel.Size = panelSize
+panel.Size = PANEL_SIZE
 panel.Position = UDim2.new(0.5, 0, 0.5, 0)
 panel.BackgroundColor3 = T().bg
 panel.BackgroundTransparency = 0.45
@@ -631,9 +621,7 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 -------------||  side bar and pages ||----------------
--------------||  side bar and pages ||----------------
 local sidebar = Instance.new("ScrollingFrame")
-
 if isMobile then
     sidebar.Size = UDim2.new(0, 110, 1, -130)
     contentArea.Position = UDim2.new(0, 126, 0, 62)
