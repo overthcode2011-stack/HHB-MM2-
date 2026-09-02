@@ -5,7 +5,7 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local TextChatService = game:GetService("TextChatService")
 local TextChannels = TextChatService:FindFirstChild("TextChannels")
-
+local isMobile = UserInputService.TouchEnabled
 local player = Players.LocalPlayer
 --|| Themes ||--
 local THEMES = {
@@ -631,16 +631,19 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 -------------||  side bar and pages ||----------------
+-------------||  side bar and pages ||----------------
 local sidebar = Instance.new("ScrollingFrame")
+
 if isMobile then
-    sidebar.Size = UDim2.new(0, 110, 1, -130) 
-    contentArea.Position = UDim2.new(0, 126, 0, 62) 
+    sidebar.Size = UDim2.new(0, 110, 1, -130)
+    contentArea.Position = UDim2.new(0, 126, 0, 62)
     contentArea.Size = UDim2.new(1, -134, 1, -68)
 else
     sidebar.Size = UDim2.new(0, 138, 1, -130)
     contentArea.Position = UDim2.new(0, 154, 0, 62)
     contentArea.Size = UDim2.new(1, -162, 1, -68)
 end
+
 sidebar.BackgroundColor3 = T().bg
 sidebar.BackgroundTransparency = 0.45
 sidebar.BorderSizePixel = 0
@@ -655,7 +658,6 @@ styleStroke(sidebar, 0.80)
 stylePadding(sidebar, 8,8,6,6)
 table.insert(reg.panels, sidebar)
 table.insert(reg.scrollBars, sidebar)
-
 local sidebarLayout = Instance.new("UIListLayout")
 sidebarLayout.Padding = UDim.new(0,6)
 sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
