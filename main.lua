@@ -618,7 +618,7 @@ contentArea.BorderSizePixel = 0
 contentArea.Parent = panel
 
 local sidebar = Instance.new("ScrollingFrame")
-sidebar.Size = UDim2.new(0, 138, 1, -130)
+sidebar.Size = UDim2.new(0, 135, 1, -140)
 sidebar.Position = UDim2.new(0, 8, 0, 62)
 sidebar.BackgroundColor3 = T().bg
 sidebar.BackgroundTransparency = 0.45
@@ -880,10 +880,9 @@ do
 	layout.Parent = homePage
 	stylePadding(homePage, 4,8,0,4)
 
-	
 	local headerCard = Instance.new("Frame")
 	headerCard.LayoutOrder = 1
-	headerCard.Size = UDim2.new(1,0,0,80)
+	headerCard.Size = UDim2.new(1, 0, 0, 80)  -- Reduje un poco la altura para que sea más compacto
 	headerCard.BackgroundColor3 = T().bg
 	headerCard.BackgroundTransparency = 0.15
 	headerCard.BorderSizePixel = 0
@@ -893,38 +892,41 @@ do
 	table.insert(reg.panels, headerCard)
 
 	local accentStripe = Instance.new("Frame")
-	accentStripe.Size = UDim2.new(0,4,0.7,0)
-	accentStripe.Position = UDim2.new(0,0,0.15,0)
+	accentStripe.Size = UDim2.new(0, 4, 0.8, 0)  -- Aumenté altura de la barra
+	accentStripe.Position = UDim2.new(0, 0, 0.1, 0)
 	accentStripe.BackgroundColor3 = T().accent
 	accentStripe.BorderSizePixel = 0
 	accentStripe.Parent = headerCard
-	styleCorner(accentStripe, UDim.new(1,0))
+	styleCorner(accentStripe, UDim.new(1, 0))
 	table.insert(reg.accentBgs, accentStripe)
 
 	local hubNameLbl = Instance.new("TextLabel")
-	hubNameLbl.Size = UDim2.new(1,-24,0,28)
-	hubNameLbl.Position = UDim2.new(0,16,0,14)
+	hubNameLbl.Size = UDim2.new(1, -50, 0, 30)  -- Ancho con margen, altura fija
+	hubNameLbl.Position = UDim2.new(0, 18, 0, 14)  -- Separación desde arriba
 	hubNameLbl.BackgroundTransparency = 1
 	hubNameLbl.Text = "Happy Hub"
 	hubNameLbl.TextColor3 = T().text
 	hubNameLbl.Font = Enum.Font.GothamBold
-	hubNameLbl.TextSize = 18
+	hubNameLbl.TextSize = 20
 	hubNameLbl.TextXAlignment = Enum.TextXAlignment.Left
+	hubNameLbl.TextYAlignment = Enum.TextYAlignment.Bottom  -- Alinear abajo para que quede cerca del subtítulo
+	hubNameLbl.TextTruncate = Enum.TextTruncate.None  -- No cortar texto
 	hubNameLbl.Parent = headerCard
 	table.insert(reg.texts, hubNameLbl)
 
 	local hubSubLbl = Instance.new("TextLabel")
-	hubSubLbl.Size = UDim2.new(1,-24,0,16)
-	hubSubLbl.Position = UDim2.new(0,16,0,44)
+	hubSubLbl.Size = UDim2.new(1, -50, 0, 20)  -- Mismo ancho que el título
+	hubSubLbl.Position = UDim2.new(0, 18, 0, 46)  -- Debajo del título
 	hubSubLbl.BackgroundTransparency = 1
 	hubSubLbl.Text = "Best free hub · Since 2026 · v10 Update"
 	hubSubLbl.TextColor3 = T().subtext
 	hubSubLbl.Font = Enum.Font.Gotham
 	hubSubLbl.TextSize = 11
 	hubSubLbl.TextXAlignment = Enum.TextXAlignment.Left
+	hubSubLbl.TextYAlignment = Enum.TextYAlignment.Top
+	hubSubLbl.TextTruncate = Enum.TextTruncate.None
 	hubSubLbl.Parent = headerCard
 	table.insert(reg.subtexts, hubSubLbl)
-
 	
 	makeSectionLabel(homePage, "Music", 2)
 
