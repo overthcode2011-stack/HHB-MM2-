@@ -625,7 +625,6 @@ contentArea.BackgroundTransparency = 1
 contentArea.BorderSizePixel = 0
 contentArea.Parent = panel
 
-
 local sidebar = Instance.new("ScrollingFrame")
 sidebar.Size = UDim2.new(0, 138, 1, -130)
 sidebar.Position = UDim2.new(0, 8, 0, 62)
@@ -689,7 +688,6 @@ contentArea.Position = UDim2.new(0, 154, 0, 62)
 contentArea.BackgroundTransparency = 1
 contentArea.BorderSizePixel = 0
 contentArea.Parent = panel
-
 
 local playerInfoPanel = Instance.new("Frame")
 playerInfoPanel.Size = UDim2.new(0, 138, 0, 58)
@@ -3987,12 +3985,18 @@ HHBFuncs.cleanupESP = cleanupESP
 ----|| toggle ||---
 local function openGui()
     panel.Visible = true
+	contentArea = true
+	sidebar = true
+	playerInfoPanel = true
     panel.BackgroundTransparency = PANEL_TRANSPARENCY
     panel.Size = PANEL_SIZE 
 end
 
 local function closeGui()
     panel.Visible = false
+	contentArea = false
+	sidebar = false
+	playerInfoPanel = false
 end
 
 local toggle = Instance.new("ImageButton")
