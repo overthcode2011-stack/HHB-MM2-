@@ -189,12 +189,9 @@ local waypoints = {}
 local Maps_mm2 = {
     "ResearchFacility", "House2", "Mansion2", "Hotel",
     "MilBase", "Bank2", "BioLab", "Factory",
-    "Workplace", "PoliceStation", "Office3","Hospital3"
+    "Workplace", "PoliceStation", "Office3","Hospital3",
 }
-
-
 -------------||  Helpers ||----------------
-
 local function getHRP()
 	local c = player.Character
 	return c and c:FindFirstChild("HumanoidRootPart")
@@ -857,7 +854,6 @@ espStates = {
 	getNameTag = nil, setNameTag = nil,
 }
 
-}
 movementStates = {
 	getNoclip = nil, setNoclip = nil,
 	getGod = nil, setGod = nil,
@@ -867,7 +863,6 @@ movementStates = {
 }
 flyState = { get = nil, set = nil, speed = DEFAULT_FLYSPEED }
 aimbotMM2 = { get = nil, set = nil, smooth = 8, range = 500, statusDot = nil, statusLbl = nil }
-aimbotGeneral = { get = nil, set = nil, fov = 500, smooth = 4 }
 
 local noclipConn, godConn, antiAFKConn, antiFlingConn = nil, nil, nil, nil
 local flyConn, flyBV, flyBG = nil, nil, nil
@@ -1485,7 +1480,6 @@ do
 		refreshList()
 	end)
 
-	-- ✅ FIX 5: exponer refreshList para que applyTheme pueda llamarla
 	HHBFuncs.refreshWaypoints = refreshList
 	_G.__HHB_refreshList = refreshList
 	refreshList()
@@ -3461,7 +3455,6 @@ do
 		
 		pcall(HHBFuncs.stopFly)
 		pcall(HHBFuncs.stopMM2Aimbot)
-		pcall(HHBFuncs.stopGeneralAimbot)
 		if noclipConn   then pcall(function() noclipConn:Disconnect()   end); noclipConn   = nil end
 		if godConn      then pcall(function() godConn:Disconnect()      end); godConn      = nil end
 		if antiAFKConn  then pcall(function() antiAFKConn:Disconnect()  end); antiAFKConn  = nil end
