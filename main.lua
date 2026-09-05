@@ -76,8 +76,6 @@ local THEMES = {
 
 local currentThemeName = "Dark"
 local function T() return THEMES[currentThemeName] end
-
--- ✅ FIX 4: don't laugh, its my code 
 local reg = {
 	panels        = {},
 	texts         = {},
@@ -100,8 +98,6 @@ local iconRefs = {}
 local customIconOverride = nil
 local execTabBtnRefs = {}
 local activeExecTabIdx = 1
-
--- ✅ FIX 2: I just inprove my script with IA sometimes, be grateful you have my code, or I'll consider you a piece of trash.
 local HHBFuncs = {}
 
 local function applyTheme()
@@ -218,7 +214,6 @@ local function uniqueName(base)
 	return base.." ("..i..")"
 end
 
--- ✅ FUNCIONES GLOBALES PARA MM2 (definidas UNA SOLA VEZ)
 local function findGunDropCFrame()
     for _, map in ipairs(workspace:GetChildren()) do
         if map:IsA("Model") and map.Name:find("Map") then
@@ -857,11 +852,11 @@ end
 
 -------------||  Data storage ||----------------
 espStates = {
-	getPL = nil, setPL = nil,
 	getMM2 = nil, setMM2 = nil,
 	getOG = nil, setOG = nil,
 	getNameTag = nil, setNameTag = nil,
-	getTeamOnly = nil, setTeamOnly = nil,
+}
+
 }
 movementStates = {
 	getNoclip = nil, setNoclip = nil,
@@ -874,11 +869,9 @@ flyState = { get = nil, set = nil, speed = DEFAULT_FLYSPEED }
 aimbotMM2 = { get = nil, set = nil, smooth = 8, range = 500, statusDot = nil, statusLbl = nil }
 aimbotGeneral = { get = nil, set = nil, fov = 500, smooth = 4 }
 
--- Variables de conexiones (scope global para poder apagarlas desde Settings)
 local noclipConn, godConn, antiAFKConn, antiFlingConn = nil, nil, nil, nil
 local flyConn, flyBV, flyBG = nil, nil, nil
--- ✅ FIX 3: mm2Conn y generalConn solo en scope externo, NO re-declarar dentro del bloque Aimbot
-local mm2Conn, generalConn = nil, nil
+local mm2Conn = nil
 local antiFlingLastPos = nil
 local ANTI_FLING_MAX_VEL = 350
 local ANTI_FLING_MAX_DELTA = 80
@@ -1927,7 +1920,6 @@ do
 	HHBFuncs.refreshPlayers = refreshPlayerList
 	refreshPlayerList()
 end
-----|| Esp page ||---
 local espPage = newPage("ESP")
 do
 	local layout = Instance.new("UIListLayout")
@@ -1936,24 +1928,16 @@ do
 	layout.Parent = espPage
 	stylePadding(espPage, 0,8,0,4)
 
-	makeSectionLabel(espPage, "ESP or Xray", 1)
-	local pillPL, setPL, getPL = makeToggleRow(espPage, "Prison Life", 2)
-	local pillMM2, setMM2, getMM2 = makeToggleRow(espPage, "Murder Mystery 2", 3)
-	local pillOG, setOG, getOG = makeToggleRow(espPage, "Other games", 4)
-	makeSectionLabel(espPage, "Options", 5)
-	local pillNameTag, setNameTag, getNameTag = makeToggleRow(espPage, "Nametag", 6)
-	local pillTeamOnly, setTeamOnly, getTeamOnly = makeToggleRow(espPage, "Just enemies", 7)
+	makeSectionLabel(espPage, "Role viewer", 1)
+	local pillMM2, setMM2, getMM2 = makeToggleRow(espPage, "Murder Mystery 2", 2)
+	local pillOG, setOG, getOG = makeToggleRow(espPage, "Neutral", 3)
+	makeSectionLabel(espPage, "Options", 4)
+	local pillNameTag, setNameTag, getNameTag = makeToggleRow(espPage, "Nametag", 5)
 
-	espStates.getPL = getPL; espStates.setPL = setPL
 	espStates.getMM2 = getMM2; espStates.setMM2 = setMM2
 	espStates.getOG = getOG; espStates.setOG = setOG
 	espStates.getNameTag = getNameTag; espStates.setNameTag = setNameTag
-	espStates.getTeamOnly = getTeamOnly; espStates.setTeamOnly = setTeamOnly
 
-	pillPL.MouseButton1Click:Connect(function()
-		local v = not getPL(); setPL(v)
-		if v then pcall(enableESP_PL) else pcall(disableESP_PL) end
-	end)
 	pillMM2.MouseButton1Click:Connect(function()
 		local v = not getMM2(); setMM2(v)
 		if v then pcall(enableESP_MM2) else pcall(disableESP_MM2) end
@@ -1965,10 +1949,6 @@ do
 	pillNameTag.MouseButton1Click:Connect(function()
 		local v = not getNameTag(); setNameTag(v)
 		if v then pcall(enableNameTags) else pcall(disableNameTags) end
-	end)
-	pillTeamOnly.MouseButton1Click:Connect(function()
-		local v = not getTeamOnly(); setTeamOnly(v)
-		if getPL() then pcall(disableESP_PL); pcall(enableESP_PL) end
 	end)
 end
 ----|| Movement ||---
@@ -2390,7 +2370,7 @@ end)
 	end)
 
 end 
-----|| Page aimbot... ||---
+--( AIM PAGE )---
 local aimbotPage = newPage("Aimbot")
 do
 	local layout = Instance.new("UIListLayout")
@@ -2406,15 +2386,8 @@ do
 	local aimbotRange = 500
 	makeSliderRow(aimbotPage, "Distance", 50, 1000, aimbotRange, function(v) aimbotRange = v end, 4)
 
-	makeSectionLabel(aimbotPage, "Normal Aimbot", 5)
-	local pillAimbotGeneral, setStateAimbotGeneral, getStateAimbotGeneral = makeToggleRow(aimbotPage, "Aimbot General (Mouse Lock)", 6)
-	local generalFOV = 500
-	makeSliderRow(aimbotPage, "FOV (píxeles)", 50, 1200, generalFOV, function(v) generalFOV = v end, 7)
-	local generalSmooth = 4
-	makeSliderRow(aimbotPage, "Smoothness", 1, 15, generalSmooth, function(v) generalSmooth = v end, 8)
-
 	local aimbotStatusBox = Instance.new("Frame")
-	aimbotStatusBox.LayoutOrder = 9
+	aimbotStatusBox.LayoutOrder = 5
 	aimbotStatusBox.Size = UDim2.new(1,0,0,50)
 	aimbotStatusBox.BackgroundColor3 = T().bg
 	aimbotStatusBox.BackgroundTransparency = 0.22
@@ -2445,9 +2418,8 @@ do
 	table.insert(reg.subtexts, aimbotStatusLbl)
 
 	makeInfoCard(aimbotPage,
-		"• Lock-On Asesino: You just can use in MM2.\n• Aimbot general is for any player",
-		10)
-
+		"• Lock-On Asesino: You just can use in MM2.",
+		6)
 
 	local function getMurderer()
 		for _, plr in ipairs(Players:GetPlayers()) do
@@ -2514,72 +2486,14 @@ do
 		end
 	end
 
-	local fovCircle = Drawing.new("Circle")
-	fovCircle.Visible = false
-	fovCircle.Thickness = 1.5
-	fovCircle.NumSides = 64
-	fovCircle.Radius = generalFOV
-	fovCircle.Transparency = 0.7
-
-	local function startGeneralAimbot()
-		fovCircle.Visible = true
-		fovCircle.Color = T().accent
-		generalConn = RunService.RenderStepped:Connect(function()
-			if not getStateAimbotGeneral() then return end
-			local camera  = workspace.CurrentCamera
-			local myHRP   = getHRP()
-			if not myHRP then return end
-			local mousePos = UserInputService:GetMouseLocation()
-			fovCircle.Position = mousePos
-			fovCircle.Radius = generalFOV
-			local closest, closestDist = nil, generalFOV
-			for _, plr in ipairs(Players:GetPlayers()) do
-				if plr == player then continue end
-				local char = plr.Character
-				if not char then continue end
-				local hrp = char:FindFirstChild("HumanoidRootPart")
-				local hum = char:FindFirstChildOfClass("Humanoid")
-				if not hrp or not hum or hum.Health <= 0 then continue end
-				local screenPos, onScreen = camera:WorldToScreenPoint(hrp.Position)
-				if not onScreen then continue end
-				local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
-				if dist < closestDist then
-					closestDist = dist
-					closest = hrp
-				end
-			end
-			if closest then
-				local targetCF = CFrame.new(camera.CFrame.Position, closest.Position)
-				local alpha    = math.clamp(1/generalSmooth, 0.05, 1)
-				camera.CFrame  = camera.CFrame:Lerp(targetCF, alpha)
-				fovCircle.Color = T().accent
-			else
-				fovCircle.Color = T().subtext
-			end
-		end)
-	end
-
-	local function stopGeneralAimbot()
-		fovCircle.Visible = false
-		if generalConn then generalConn:Disconnect(); generalConn = nil end
-	end
-
-	
 	HHBFuncs.startMM2Aimbot     = startMM2Aimbot
 	HHBFuncs.stopMM2Aimbot      = stopMM2Aimbot
-	HHBFuncs.startGeneralAimbot = startGeneralAimbot
-	HHBFuncs.stopGeneralAimbot  = stopGeneralAimbot
 
 	pillAimbotMM2.MouseButton1Click:Connect(function()
 		local v = not getStateAimbotMM2(); setStateAimbotMM2(v)
 		if v then startMM2Aimbot() else stopMM2Aimbot() end
 	end)
-	pillAimbotGeneral.MouseButton1Click:Connect(function()
-		local v = not getStateAimbotGeneral(); setStateAimbotGeneral(v)
-		if v then startGeneralAimbot() else stopGeneralAimbot() end
-	end)
 end
-
 ----|| Page Avatar  ||---
 local avatarPage = newPage("Avatar")
 do
@@ -3771,7 +3685,7 @@ local function setESP(mode, active)
     refreshAllESP()
 end
 
--- === ACTUALIZADOR PERIÓDICO PARA MM2 ===
+
 local mm2PeriodicUpdateThread = nil
 local function startMM2PeriodicUpdate()
     if mm2PeriodicUpdateThread then return end
@@ -3779,7 +3693,7 @@ local function startMM2PeriodicUpdate()
         while ESP.active.MM2 do
             task.wait(1)
             if ESP.active.MM2 then
-                refreshAllESP() -- Actualiza todos los ESP (incluido MM2)
+                refreshAllESP()
             end
         end
         mm2PeriodicUpdateThread = nil
@@ -3793,7 +3707,7 @@ local function stopMM2PeriodicUpdate()
     end
 end
 
--- === CONFIGURAR EVENTOS ===
+
 local function setupCharacterToolListeners(plr)
     local char = plr.Character
     if not char then return end
@@ -3891,7 +3805,7 @@ if roundStartRemote then
     table.insert(ESP.connections, roundStartConn)
 end
 
--- === ACTUALIZAR DISTANCIAS EN NAMETAGS ===
+
 local nameTagUpdater
 local function startNameTagUpdater()
     if nameTagUpdater then return end
@@ -4054,4 +3968,4 @@ end)
 
 switchTab("Home")
 applyTheme()
-print("\27[38;2;0;255;0mHappy Hub Open source Licenced by Github > By Odecode .\n")---aplicar aqui
+print("\27[38;2;0;255;0mHappy Hub Open source Licenced by Github > By Odecode .\n")
