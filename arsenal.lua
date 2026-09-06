@@ -434,9 +434,9 @@ function CSGOHub:CreateWindow(title)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Font = Enum.Font.GothamBlack
     TitleLabel.TextSize = 28
-    TitleLabel.TextColor3 = Accent
+    TitleLabel.TextColor3 = Color3.new(0, 255, 63)
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TitleLabel.Text = "Happy Hub"
+    TitleLabel.Text = title or "Happy Hub"
     TitleLabel.ZIndex = 3
     TitleLabel.Parent = TopBar
 
