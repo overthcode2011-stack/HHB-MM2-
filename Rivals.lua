@@ -11,7 +11,7 @@ local Camera           = workspace.CurrentCamera
 local mousemoverel = mousemoverel or MouseMoveRel or (syn and syn.mousemoverel) or (fluxus and fluxus.mousemoverel)
 
 local MAIN_ICON  = "rbxassetid://104348663064077"
-local CLOSE_ICON = "rbxassetid://93310349660228"
+local CLOSE_ICON = "rbxassetid://130629964514885"
 local MIN_ICON   = "rbxassetid://115558082558028"
 local AIM_ICON   = "rbxassetid://93310349660228"
 local VIS_ICON   = "rbxassetid://13321848320"
