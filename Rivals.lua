@@ -6,6 +6,7 @@ local TweenService     = game:GetService("TweenService")
 local RunService       = game:GetService("RunService")
 local Players          = game:GetService("Players")
 local HttpService      = game:GetService("HttpService")
+local SoundService     = game:GetService("SoundService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer      = Players.LocalPlayer
 local Camera           = workspace.CurrentCamera
@@ -29,6 +30,19 @@ local MISC_ICON  = "rbxassetid://109962716823639"
 local PLR_ICON   = "rbxassetid://122086195900803"
 local CFG_ICON   = "rbxassetid://111467744253591"
 local NOTIF_ICON = "rbxassetid://111849828445660"
+
+local TYPING_SOUND_ID = "rbxassetid://140036379967302"
+local NOTIF_SOUND_ID  = "rbxassetid://97455084935031"
+
+local typingSound = Instance.new("Sound")
+typingSound.SoundId = TYPING_SOUND_ID
+typingSound.Volume = 0.5
+typingSound.Parent = SoundService
+
+local notifSound = Instance.new("Sound")
+notifSound.SoundId = NOTIF_SOUND_ID
+notifSound.Volume = 1
+notifSound.Parent = SoundService
 
 local THEMES = {
     Green = {
@@ -71,16 +85,6 @@ local THEMES = {
         ToggleOn      = Color3.fromRGB(230, 50, 50),
         ToggleOff     = Color3.fromRGB(70, 28, 28),
     },
-    White = {
-        Accent        = Color3.fromRGB(0, 150, 80),
-        Background    = Color3.fromRGB(236, 236, 236),
-        Panel         = Color3.fromRGB(220, 220, 220),
-        Text          = Color3.fromRGB(15, 15, 15),
-        TextSecondary = Color3.fromRGB(90, 90, 90),
-        Hover         = Color3.fromRGB(200, 200, 200),
-        ToggleOn      = Color3.fromRGB(0, 150, 80),
-        ToggleOff     = Color3.fromRGB(170, 170, 170),
-    },
 }
 
 local currentThemeName = "Green"
@@ -99,6 +103,8 @@ local reg = {
     sliderFills   = {},
     sliderHandles = {},
     sidebarBtns   = {},
+    sidebarIcons  = {},
+    sidebarTexts  = {},
     scrollBars    = {},
     mainFrame     = nil,
     tabContainer  = nil,
@@ -133,14 +139,33 @@ local function applyTheme()
     for _, d in ipairs(reg.sidebarBtns) do
         local btn, name = d[1], d[2]
         if btn and btn.Parent then
+            btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
             if name == _G.__activeTabName then
-                btn.BackgroundColor3 = th.Accent
                 btn.BackgroundTransparency = 0
-                btn.TextColor3 = th.Background
+                btn.TextColor3 = th.Accent
             else
-                btn.BackgroundColor3 = th.Panel
                 btn.BackgroundTransparency = 0.35
                 btn.TextColor3 = th.Text
+            end
+        end
+    end
+    for _, d in ipairs(reg.sidebarIcons) do
+        local ic, name = d[1], d[2]
+        if ic and ic.Parent then
+            if name == _G.__activeTabName then
+                ic.ImageColor3 = th.Accent
+            else
+                ic.ImageColor3 = th.TextSecondary
+            end
+        end
+    end
+    for _, d in ipairs(reg.sidebarTexts) do
+        local tx, name = d[1], d[2]
+        if tx and tx.Parent then
+            if name == _G.__activeTabName then
+                tx.TextColor3 = th.Accent
+            else
+                tx.TextColor3 = th.Text
             end
         end
     end
@@ -666,6 +691,7 @@ local notifOrder = 0
 local function Notify(text, duration)
     duration = duration or 3
     notifOrder = notifOrder + 1
+    pcall(function() notifSound:Play() end)
 
     local frame = Instance.new("Frame")
     frame.Name = "Notification"
@@ -785,6 +811,7 @@ end
 
 local function playTyping(tab)
     if not tab then return end
+    pcall(function() typingSound:Play() end)
     for _, entry in ipairs(typingTokens) do
         local lbl = entry.Label
         if lbl and lbl.Parent and lbl:IsDescendantOf(tab.Content) then
@@ -905,13 +932,14 @@ function CSGOHub:CreateWindow(title, subtitle)
 
     local TitleLabel = Instance.new("TextLabel")
     TitleLabel.Name = "Title"
-    TitleLabel.Size = UDim2.new(1, -160, 0, 18)
+    TitleLabel.Size = UDim2.new(1, -140, 0, 18)
     TitleLabel.Position = UDim2.new(0, 58, 0, 10)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Font = Enum.Font.GothamBold
     TitleLabel.TextSize = 16
     TitleLabel.TextColor3 = Colors.Text
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.TextTruncate = Enum.TextTruncate.AtEnd
     TitleLabel.Text = title or "Happy Hub"
     TitleLabel.ZIndex = 4
     TitleLabel.Parent = TopBar
@@ -919,14 +947,15 @@ function CSGOHub:CreateWindow(title, subtitle)
 
     local SubTitleLabel = Instance.new("TextLabel")
     SubTitleLabel.Name = "SubTitle"
-    SubTitleLabel.Size = UDim2.new(1, -160, 0, 14)
+    SubTitleLabel.Size = UDim2.new(1, -140, 0, 14)
     SubTitleLabel.Position = UDim2.new(0, 58, 0, 30)
     SubTitleLabel.BackgroundTransparency = 1
     SubTitleLabel.Font = Enum.Font.Gotham
     SubTitleLabel.TextSize = 10
     SubTitleLabel.TextColor3 = Colors.TextSecondary
     SubTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    SubTitleLabel.Text = subtitle or "Rivals proyect · Keyless · by replicatedman · rblxscripts.net"
+    SubTitleLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    SubTitleLabel.Text = subtitle or "Rivals · Keyless"
     SubTitleLabel.ZIndex = 4
     SubTitleLabel.Parent = TopBar
     register(reg.subtexts, SubTitleLabel)
@@ -1281,7 +1310,7 @@ function CSGOHub:CreateWindow(title, subtitle)
         local TabButton = Instance.new("TextButton")
         TabButton.Size = UDim2.new(1, -20, 0, 40)
         TabButton.Position = UDim2.new(0, 10, 0, 10 + (#self.Tabs * 50))
-        TabButton.BackgroundColor3 = Colors.Panel
+        TabButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
         TabButton.BackgroundTransparency = 0.35
         TabButton.BorderSizePixel = 0
         TabButton.Font = Enum.Font.GothamSemibold
@@ -1304,7 +1333,6 @@ function CSGOHub:CreateWindow(title, subtitle)
         icon.ScaleType = Enum.ScaleType.Fit
         icon.ZIndex = 4
         icon.Parent = TabButton
-        register(reg.accentIcons, icon)
 
         local txt = Instance.new("TextLabel")
         txt.Name = "TabText"
@@ -1318,7 +1346,10 @@ function CSGOHub:CreateWindow(title, subtitle)
         txt.Text = name
         txt.ZIndex = 4
         txt.Parent = TabButton
-        register(reg.texts, txt)
+
+        register(reg.sidebarBtns, {TabButton, name})
+        register(reg.sidebarIcons, {icon, name})
+        register(reg.sidebarTexts, {txt, name})
 
         local TabContent = Instance.new("ScrollingFrame")
         TabContent.Size = UDim2.new(1, -8, 1, -8)
@@ -1348,18 +1379,21 @@ function CSGOHub:CreateWindow(title, subtitle)
 
         TabButton.MouseEnter:Connect(function()
             if self.ActiveTab ~= tab then
-                TweenService:Create(TabButton, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Hover}):Play()
+                TweenService:Create(TabButton, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(20, 20, 20)}):Play()
+                TweenService:Create(icon, TweenInfo.new(0.15), {ImageColor3 = Colors.Accent}):Play()
+                TweenService:Create(txt, TweenInfo.new(0.15), {TextColor3 = Colors.Text}):Play()
             end
         end)
         TabButton.MouseLeave:Connect(function()
             if self.ActiveTab ~= tab then
-                TweenService:Create(TabButton, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Panel}):Play()
+                TweenService:Create(TabButton, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(0, 0, 0)}):Play()
+                TweenService:Create(icon, TweenInfo.new(0.15), {ImageColor3 = Colors.TextSecondary}):Play()
+                TweenService:Create(txt, TweenInfo.new(0.15), {TextColor3 = Colors.Text}):Play()
             end
         end)
         TabButton.MouseButton1Click:Connect(function() self:SelectTab(tab) end)
 
         table.insert(self.Tabs, tab)
-        register(reg.sidebarBtns, {TabButton, name})
 
         if #self.Tabs == 1 then self:SelectTab(tab) end
         return tab
@@ -1368,9 +1402,9 @@ function CSGOHub:CreateWindow(title, subtitle)
     function window:SelectTab(tab)
         closeAllDropdowns()
         if self.ActiveTab then
-            self.ActiveTab.Button.BackgroundColor3 = Colors.Panel
-            self.ActiveTab.Button.BackgroundTransparency = 0.3
-            if self.ActiveTab.TextRef then self.ActiveTab.TextRef.TextColor3 = Colors.TextSecondary end
+            self.ActiveTab.Button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            self.ActiveTab.Button.BackgroundTransparency = 0.35
+            if self.ActiveTab.TextRef then self.ActiveTab.TextRef.TextColor3 = Colors.Text end
             if self.ActiveTab.IconRef then
                 TweenService:Create(self.ActiveTab.IconRef, TweenInfo.new(0.15), {ImageColor3 = Colors.TextSecondary}):Play()
             end
@@ -1378,7 +1412,7 @@ function CSGOHub:CreateWindow(title, subtitle)
         end
         self.ActiveTab = tab
         _G.__activeTabName = tab.Name
-        tab.Button.BackgroundColor3 = Colors.Background
+        tab.Button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
         tab.Button.BackgroundTransparency = 0
         if tab.TextRef then tab.TextRef.TextColor3 = Colors.Accent end
         if tab.IconRef then
@@ -1517,8 +1551,7 @@ function CSGOHub:CreateWindow(title, subtitle)
         local sf = Instance.new("Frame")
         sf.Size = UDim2.new(1, 0, 0, 6)
         sf.Position = UDim2.new(0, 0, 1, -15)
-        sf.BackgroundColor3 = Colors.ToggleOff
-        sf.BorderSizePixel = 0
+        sf.BackgroundColor3 = Colors.ToggleOff        sf.BorderSizePixel = 0
         sf.ZIndex = 3
         sf.Parent = c
         makeCorner(sf, 3)
@@ -1729,7 +1762,7 @@ function CSGOHub:CreateWindow(title, subtitle)
     return window
 end
 
-local win = CSGOHub:CreateWindow("Happy Hub", "Rivals Edition · Keyless")
+local win = CSGOHub:CreateWindow("Happy Hub", "Rivals · Keyless · by replicatedman")
 
 local aimbotTab = win:CreateTab("Aimbot", AIM_ICON)
 local visualsTab = win:CreateTab("Visuals", VIS_ICON)
@@ -2044,7 +2077,7 @@ themeLayout.FillDirection = Enum.FillDirection.Horizontal
 themeLayout.Padding = UDim.new(0, 6)
 themeLayout.Parent = themeRow
 
-local themeNames = {"Green", "Purple", "Blue", "Red", "White"}
+local themeNames = {"Green", "Purple", "Blue", "Red"}
 for _, tName in ipairs(themeNames) do
     local themeBtn = Instance.new("TextButton")
     themeBtn.Size = UDim2.fromOffset(62, 46)
