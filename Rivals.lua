@@ -11,12 +11,12 @@ local Camera           = workspace.CurrentCamera
 local mousemoverel = mousemoverel or MouseMoveRel or (syn and syn.mousemoverel) or (fluxus and fluxus.mousemoverel)
 
 local MAIN_ICON  = "rbxassetid://104348663064077"
-local CLOSE_ICON = "rbxassetid://93310349660228"
+local CLOSE_ICON = "rbxassetid://76491990024731"
 local MIN_ICON   = "rbxassetid://115558082558028"
 local AIM_ICON   = "rbxassetid://93310349660228"
 local VIS_ICON   = "rbxassetid://13321848320"
 local MISC_ICON  = "rbxassetid://109962716823639"
-local NOTIF_ICON = "rbxassetid://111849828445660"
+local NOTIF_ICON = "rbxassetid://81265411293874"
 
 local AimbotSettings = {
     Enabled     = false,
