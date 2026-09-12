@@ -762,16 +762,6 @@ function CSGOHub:CreateWindow(title)
     Shadow.Parent = MainFrame
     makeCorner(Shadow, 12)
 
-    local TopBorder = Instance.new("Frame")
-    TopBorder.Name = "TopBorder"
-    TopBorder.Size = UDim2.new(1, -24, 0, 2)
-    TopBorder.Position = UDim2.new(0, 12, 0, 6)
-    TopBorder.BackgroundColor3 = Colors.Accent
-    TopBorder.BorderSizePixel = 0
-    TopBorder.ZIndex = 3
-    TopBorder.Parent = MainFrame
-    makeCorner(TopBorder, 1)
-
     local TopBar = Instance.new("Frame")
     TopBar.Name = "TopBar"
     TopBar.Size = UDim2.new(1, 0, 0, 56)
@@ -783,6 +773,20 @@ function CSGOHub:CreateWindow(title)
     TopBar.ZIndex = 2
     TopBar.Parent = MainFrame
     makeCorner(TopBar, 12)
+
+    local TopBarGradient = Instance.new("UIGradient")
+    TopBarGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
+        ColorSequenceKeypoint.new(0.5, Colors.Accent),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0)),
+    })
+    TopBarGradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.5, 0.55),
+        NumberSequenceKeypoint.new(1, 1),
+    })
+    TopBarGradient.Rotation = 0
+    TopBarGradient.Parent = TopBar
 
     local TopBarMask = Instance.new("Frame")
     TopBarMask.Size = UDim2.new(1, 0, 0, 12)
@@ -1087,6 +1091,7 @@ function CSGOHub:CreateWindow(title)
         icon.BackgroundTransparency = 1
         icon.Image = iconId and ("rbxassetid://" .. tostring(iconId)) or ""
         icon.ImageColor3 = Colors.TextSecondary
+        icon.ScaleType = Enum.ScaleType.Fit
         icon.ZIndex = 4
         icon.Parent = TabButton
 
