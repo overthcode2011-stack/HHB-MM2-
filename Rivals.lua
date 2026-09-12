@@ -926,7 +926,7 @@ function CSGOHub:CreateWindow(title, subtitle)
     SubTitleLabel.TextSize = 10
     SubTitleLabel.TextColor3 = Colors.TextSecondary
     SubTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    SubTitleLabel.Text = subtitle or "Rivals Edition · Keyless"
+    SubTitleLabel.Text = subtitle or "Rivals proyect · Keyless · by replicatedman · rblxscripts.net"
     SubTitleLabel.ZIndex = 4
     SubTitleLabel.Parent = TopBar
     register(reg.subtexts, SubTitleLabel)
