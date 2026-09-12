@@ -860,7 +860,7 @@ function CSGOHub:CreateWindow(title)
     CloseIcon.Parent = CloseButton
 
     local TabContainer = Instance.new("Frame")
-    TabContainer.Size = UDim2.new(0, 200, 1, -73)
+    TabContainer.Size = UDim2.new(0, 200, 1, -145)
     TabContainer.Position = UDim2.new(0, 8, 0, 61)
     TabContainer.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
     TabContainer.BackgroundTransparency = 0.2
@@ -880,6 +880,97 @@ function CSGOHub:CreateWindow(title)
     ContentArea.ZIndex = 2
     ContentArea.Parent = MainFrame
     makeCorner(ContentArea, 10)
+
+    local PlayerCard = Instance.new("Frame")
+    PlayerCard.Name = "PlayerCard"
+    PlayerCard.Size = UDim2.new(0, 200, 0, 64)
+    PlayerCard.Position = UDim2.new(0, 8, 1, -72)
+    PlayerCard.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+    PlayerCard.BackgroundTransparency = 0.15
+    PlayerCard.BorderSizePixel = 0
+    PlayerCard.ZIndex = 5
+    PlayerCard.Parent = MainFrame
+    makeCorner(PlayerCard, 10)
+    makeStroke(PlayerCard, Colors.Accent, 1, 0.7)
+
+    local pfpFrame = Instance.new("Frame")
+    pfpFrame.Size = UDim2.fromOffset(44, 44)
+    pfpFrame.Position = UDim2.new(0, 10, 0.5, -22)
+    pfpFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    pfpFrame.BorderSizePixel = 0
+    pfpFrame.Parent = PlayerCard
+    makeCorner(pfpFrame, 22)
+
+    local pfp = Instance.new("ImageLabel")
+    pfp.Size = UDim2.new(1, 0, 1, 0)
+    pfp.BackgroundTransparency = 1
+    pfp.BorderSizePixel = 0
+    pfp.ScaleType = Enum.ScaleType.Crop
+    pfp.Parent = pfpFrame
+    makeCorner(pfp, 22)
+
+    local onlineDot = Instance.new("Frame")
+    onlineDot.Size = UDim2.fromOffset(12, 12)
+    onlineDot.Position = UDim2.new(1, -12, 1, -12)
+    onlineDot.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
+    onlineDot.BorderSizePixel = 0
+    onlineDot.ZIndex = 6
+    onlineDot.Parent = pfpFrame
+    makeCorner(onlineDot, 6)
+
+    local onlineDotStroke = Instance.new("UIStroke")
+    onlineDotStroke.Color = Color3.fromRGB(8, 8, 8)
+    onlineDotStroke.Thickness = 2
+    onlineDotStroke.Parent = onlineDot
+
+    local pfpName = Instance.new("TextLabel")
+    pfpName.Size = UDim2.new(1, -72, 0, 18)
+    pfpName.Position = UDim2.new(0, 62, 0, 14)
+    pfpName.BackgroundTransparency = 1
+    pfpName.Font = Enum.Font.GothamBold
+    pfpName.TextSize = 13
+    pfpName.TextColor3 = Colors.Text
+    pfpName.TextXAlignment = Enum.TextXAlignment.Left
+    pfpName.TextTruncate = Enum.TextTruncate.AtEnd
+    pfpName.Text = LocalPlayer.DisplayName
+    pfpName.Parent = PlayerCard
+
+    local pfpUser = Instance.new("TextLabel")
+    pfpUser.Size = UDim2.new(1, -72, 0, 14)
+    pfpUser.Position = UDim2.new(0, 62, 0, 32)
+    pfpUser.BackgroundTransparency = 1
+    pfpUser.Font = Enum.Font.Gotham
+    pfpUser.TextSize = 11
+    pfpUser.TextColor3 = Colors.TextSecondary
+    pfpUser.TextXAlignment = Enum.TextXAlignment.Left
+    pfpUser.TextTruncate = Enum.TextTruncate.AtEnd
+    pfpUser.Text = "@" .. LocalPlayer.Name
+    pfpUser.Parent = PlayerCard
+
+    task.spawn(function()
+        local success, thumb = pcall(function()
+            return Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+        end)
+        if success then
+            pfp.Image = thumb
+        end
+    end)
+
+    local function updatePlayerCard()
+        task.spawn(function()
+            local success, thumb = pcall(function()
+                return Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+            end)
+            if success then pfp.Image = thumb end
+        end)
+        pfpName.Text = LocalPlayer.DisplayName
+        pfpUser.Text = "@" .. LocalPlayer.Name
+    end
+
+    LocalPlayer.CharacterAdded:Connect(function()
+        task.wait(0.5)
+        updatePlayerCard()
+    end)
 
     local KeybindsPanel = Instance.new("Frame")
     KeybindsPanel.Name = "KeybindsPanel"
@@ -961,6 +1052,7 @@ function CSGOHub:CreateWindow(title)
         MainFrame    = MainFrame,
         TabContainer = TabContainer,
         ContentArea  = ContentArea,
+        PlayerCard   = PlayerCard,
         Tabs         = {},
         ActiveTab    = nil,
         IsVisible    = true,
@@ -1511,7 +1603,6 @@ local visualsTab = win:CreateTab("Visuals", VIS_ICON)
 local miscTab    = win:CreateTab("Misc", MISC_ICON)
 
 local aimbotToggleRef, espToggleRef, nametagToggleRef
-local infJumpToggleRef, noclipToggleRef, godToggleRef, antiAFKToggleRef
 
 win:CreateLabel(aimbotTab, "Aimbot Settings")
 
@@ -1575,12 +1666,12 @@ end)
 
 win:CreateLabel(miscTab, "Movement")
 
-infJumpToggleRef = win:CreateToggle(miscTab, "Infinite Jump", MiscSettings.InfJump, function(v)
+win:CreateToggle(miscTab, "Infinite Jump", MiscSettings.InfJump, function(v)
     MiscSettings.InfJump = v
     Notify(v and "Infinite Jump enabled" or "Infinite Jump disabled")
 end)
 
-noclipToggleRef = win:CreateToggle(miscTab, "Noclip", MovementSettings.Noclip, function(v)
+win:CreateToggle(miscTab, "Noclip", MovementSettings.Noclip, function(v)
     MovementSettings.Noclip = v
     if v then
         noclipConn = RunService.Stepped:Connect(function()
@@ -1596,7 +1687,7 @@ noclipToggleRef = win:CreateToggle(miscTab, "Noclip", MovementSettings.Noclip, f
     end
 end)
 
-godToggleRef = win:CreateToggle(miscTab, "God Mode", MovementSettings.God, function(v)
+win:CreateToggle(miscTab, "God Mode", MovementSettings.God, function(v)
     MovementSettings.God = v
     if v then
         godConn = RunService.Heartbeat:Connect(function()
@@ -1608,7 +1699,7 @@ godToggleRef = win:CreateToggle(miscTab, "God Mode", MovementSettings.God, funct
     end
 end)
 
-antiAFKToggleRef = win:CreateToggle(miscTab, "Anti-AFK", MiscSettings.AntiAFK, function(v)
+win:CreateToggle(miscTab, "Anti-AFK", MiscSettings.AntiAFK, function(v)
     MiscSettings.AntiAFK = v
     if v then
         local vu = game:GetService("VirtualUser")
