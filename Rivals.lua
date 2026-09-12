@@ -11,12 +11,12 @@ local Camera           = workspace.CurrentCamera
 local mousemoverel = mousemoverel or MouseMoveRel or (syn and syn.mousemoverel) or (fluxus and fluxus.mousemoverel)
 
 local MAIN_ICON  = "rbxassetid://104348663064077"
-local CLOSE_ICON = "rbxassetid://76491990024731"
+local CLOSE_ICON = "rbxassetid://130629964514885"
 local MIN_ICON   = "rbxassetid://115558082558028"
 local AIM_ICON   = "rbxassetid://93310349660228"
 local VIS_ICON   = "rbxassetid://13321848320"
 local MISC_ICON  = "rbxassetid://109962716823639"
-local NOTIF_ICON = "rbxassetid://81265411293874"
+local NOTIF_ICON = "rbxassetid://111849828445660"
 
 local AimbotSettings = {
     Enabled     = false,
@@ -937,6 +937,19 @@ function CSGOHub:CreateWindow(title)
     makeKeybindRow(KeybindsPanel, "O", "Toggle ESP", 2)
     makeKeybindRow(KeybindsPanel, "F3", "Toggle UI", 3)
 
+    local DragBar = Instance.new("Frame")
+    DragBar.Name = "DragBar"
+    DragBar.Size = UDim2.new(0, 40, 0, 4)
+    DragBar.AnchorPoint = Vector2.new(0.5, 1)
+    DragBar.Position = UDim2.new(0.5, 0, 1, -6)
+    DragBar.BackgroundColor3 = Colors.Text
+    DragBar.BackgroundTransparency = 0.3
+    DragBar.BorderSizePixel = 0
+    DragBar.Active = true
+    DragBar.ZIndex = 4
+    DragBar.Parent = MainFrame
+    makeCorner(DragBar, 2)
+
     local window = {
         ScreenGui    = ScreenGui,
         MainFrame    = MainFrame,
@@ -977,12 +990,28 @@ function CSGOHub:CreateWindow(title)
             beginDrag(input)
         end
     end)
+
+    DragBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            beginDrag(input)
+        end
+    end)
+
+    DragBar.MouseEnter:Connect(function()
+        TweenService:Create(DragBar, TweenInfo.new(0.15), {BackgroundTransparency = 0}):Play()
+    end)
+    DragBar.MouseLeave:Connect(function()
+        TweenService:Create(DragBar, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
+    end)
+
     UserInputService.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement
         or input.UserInputType == Enum.UserInputType.Touch then
             updateDrag(input)
         end
     end)
+
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1
         or input.UserInputType == Enum.UserInputType.Touch then
