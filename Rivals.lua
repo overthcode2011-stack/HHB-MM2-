@@ -856,24 +856,26 @@ function CSGOHub:CreateWindow(title)
     CloseIcon.Parent = CloseButton
 
     local TabContainer = Instance.new("Frame")
-    TabContainer.Size = UDim2.new(0, 200, 1, -61)
-    TabContainer.Position = UDim2.new(0, 0, 0, 61)
+    TabContainer.Size = UDim2.new(0, 200, 1, -73)
+    TabContainer.Position = UDim2.new(0, 8, 0, 61)
     TabContainer.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
     TabContainer.BackgroundTransparency = 0.2
     TabContainer.BorderSizePixel = 0
     TabContainer.ClipsDescendants = true
     TabContainer.ZIndex = 2
     TabContainer.Parent = MainFrame
+    makeCorner(TabContainer, 10)
 
     local ContentArea = Instance.new("Frame")
-    ContentArea.Size = UDim2.new(1, -200, 1, -61)
-    ContentArea.Position = UDim2.new(0, 200, 0, 61)
+    ContentArea.Size = UDim2.new(1, -224, 1, -73)
+    ContentArea.Position = UDim2.new(0, 216, 0, 61)
     ContentArea.BackgroundColor3 = Colors.Background
     ContentArea.BackgroundTransparency = 0.4
     ContentArea.BorderSizePixel = 0
     ContentArea.ClipsDescendants = true
     ContentArea.ZIndex = 2
     ContentArea.Parent = MainFrame
+    makeCorner(ContentArea, 10)
 
     local KeybindsPanel = Instance.new("Frame")
     KeybindsPanel.Name = "KeybindsPanel"
@@ -939,7 +941,7 @@ function CSGOHub:CreateWindow(title)
 
     local DragBar = Instance.new("Frame")
     DragBar.Name = "DragBar"
-    DragBar.Size = UDim2.new(0, 40, 0, 4)
+    DragBar.Size = UDim2.new(0.12, 0, 0, 4)
     DragBar.AnchorPoint = Vector2.new(0.5, 1)
     DragBar.Position = UDim2.new(0.5, 0, 1, -6)
     DragBar.BackgroundColor3 = Colors.Text
@@ -1102,7 +1104,8 @@ function CSGOHub:CreateWindow(title)
         txt.Parent = TabButton
 
         local TabContent = Instance.new("ScrollingFrame")
-        TabContent.Size = UDim2.new(1, 0, 1, 0)
+        TabContent.Size = UDim2.new(1, -8, 1, -8)
+        TabContent.Position = UDim2.new(0, 4, 0, 4)
         TabContent.BackgroundTransparency = 1
         TabContent.BorderSizePixel = 0
         TabContent.ScrollBarThickness = 4
@@ -1112,6 +1115,7 @@ function CSGOHub:CreateWindow(title)
         TabContent.ZIndex = 3
         TabContent.Parent = self.ContentArea
         TabContent.Visible = false
+        makeCorner(TabContent, 8)
 
         local tab = {
             Button   = TabButton,
