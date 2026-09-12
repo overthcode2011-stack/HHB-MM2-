@@ -1,14 +1,24 @@
-if _G.__rivals_aimbot_loaded then return end
-_G.__rivals_aimbot_loaded = true
+if _G.__rivals_happyhub_loaded then return end
+_G.__rivals_happyhub_loaded = true
 
 local UserInputService = game:GetService("UserInputService")
 local TweenService     = game:GetService("TweenService")
 local RunService       = game:GetService("RunService")
 local Players          = game:GetService("Players")
+local HttpService      = game:GetService("HttpService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer      = Players.LocalPlayer
 local Camera           = workspace.CurrentCamera
 
 local mousemoverel = mousemoverel or MouseMoveRel or (syn and syn.mousemoverel) or (fluxus and fluxus.mousemoverel)
+
+local hasFileSystem = (writefile and readfile and isfile and isfolder and makefolder)
+if hasFileSystem then
+    pcall(function()
+        if not isfolder("HappyHub") then makefolder("HappyHub") end
+        if not isfolder("HappyHub/Configs") then makefolder("HappyHub/Configs") end
+    end)
+end
 
 local MAIN_ICON  = "rbxassetid://104348663064077"
 local CLOSE_ICON = "rbxassetid://130629964514885"
@@ -16,45 +26,153 @@ local MIN_ICON   = "rbxassetid://115558082558028"
 local AIM_ICON   = "rbxassetid://93310349660228"
 local VIS_ICON   = "rbxassetid://13321848320"
 local MISC_ICON  = "rbxassetid://109962716823639"
+local PLR_ICON   = "rbxassetid://122086195900803"
+local CFG_ICON   = "rbxassetid://111467744253591"
 local NOTIF_ICON = "rbxassetid://111849828445660"
 
+local THEMES = {
+    Green = {
+        Accent        = Color3.fromRGB(0, 255, 63),
+        Background    = Color3.fromRGB(0, 0, 0),
+        Panel         = Color3.fromRGB(8, 8, 8),
+        Text          = Color3.fromRGB(255, 255, 255),
+        TextSecondary = Color3.fromRGB(180, 180, 180),
+        Hover         = Color3.fromRGB(20, 20, 20),
+        ToggleOn      = Color3.fromRGB(0, 255, 63),
+        ToggleOff     = Color3.fromRGB(40, 40, 40),
+    },
+    Purple = {
+        Accent        = Color3.fromRGB(160, 80, 255),
+        Background    = Color3.fromRGB(8, 4, 15),
+        Panel         = Color3.fromRGB(12, 8, 20),
+        Text          = Color3.fromRGB(240, 228, 255),
+        TextSecondary = Color3.fromRGB(160, 140, 200),
+        Hover         = Color3.fromRGB(25, 15, 40),
+        ToggleOn      = Color3.fromRGB(160, 80, 255),
+        ToggleOff     = Color3.fromRGB(55, 35, 80),
+    },
+    Blue = {
+        Accent        = Color3.fromRGB(40, 160, 255),
+        Background    = Color3.fromRGB(3, 8, 15),
+        Panel         = Color3.fromRGB(6, 12, 22),
+        Text          = Color3.fromRGB(215, 232, 255),
+        TextSecondary = Color3.fromRGB(120, 160, 210),
+        Hover         = Color3.fromRGB(15, 25, 45),
+        ToggleOn      = Color3.fromRGB(40, 160, 255),
+        ToggleOff     = Color3.fromRGB(25, 45, 80),
+    },
+    Red = {
+        Accent        = Color3.fromRGB(230, 50, 50),
+        Background    = Color3.fromRGB(10, 3, 3),
+        Panel         = Color3.fromRGB(15, 5, 5),
+        Text          = Color3.fromRGB(255, 228, 228),
+        TextSecondary = Color3.fromRGB(190, 140, 140),
+        Hover         = Color3.fromRGB(30, 10, 10),
+        ToggleOn      = Color3.fromRGB(230, 50, 50),
+        ToggleOff     = Color3.fromRGB(70, 28, 28),
+    },
+    White = {
+        Accent        = Color3.fromRGB(0, 150, 80),
+        Background    = Color3.fromRGB(236, 236, 236),
+        Panel         = Color3.fromRGB(220, 220, 220),
+        Text          = Color3.fromRGB(15, 15, 15),
+        TextSecondary = Color3.fromRGB(90, 90, 90),
+        Hover         = Color3.fromRGB(200, 200, 200),
+        ToggleOn      = Color3.fromRGB(0, 150, 80),
+        ToggleOff     = Color3.fromRGB(170, 170, 170),
+    },
+}
+
+local currentThemeName = "Green"
+local Colors = {}
+for k, v in pairs(THEMES.Green) do Colors[k] = v end
+
+local reg = {
+    panels        = {},
+    texts         = {},
+    subtexts      = {},
+    accentBgs     = {},
+    accentTexts   = {},
+    accentStrokes = {},
+    accentIcons   = {},
+    pills         = {},
+    sliderFills   = {},
+    sliderHandles = {},
+    sidebarBtns   = {},
+    scrollBars    = {},
+    mainFrame     = nil,
+    tabContainer  = nil,
+    contentArea   = nil,
+    playerCard    = nil,
+}
+
+local refreshPlayerList = nil
+
+local function register(list, obj)
+    table.insert(list, obj)
+    return obj
+end
+
+local function applyTheme()
+    local th = Colors
+    if reg.mainFrame then reg.mainFrame.BackgroundColor3 = th.Background end
+    for _, o in ipairs(reg.panels)        do if o and o.Parent then o.BackgroundColor3 = th.Panel    end end
+    for _, o in ipairs(reg.texts)         do if o and o.Parent then o.TextColor3       = th.Text     end end
+    for _, o in ipairs(reg.subtexts)      do if o and o.Parent then o.TextColor3       = th.TextSecondary end end
+    for _, o in ipairs(reg.accentBgs)     do if o and o.Parent then o.BackgroundColor3 = th.Accent   end end
+    for _, o in ipairs(reg.accentTexts)   do if o and o.Parent then o.TextColor3       = th.Accent   end end
+    for _, o in ipairs(reg.accentStrokes) do if o and o.Parent then o.Color            = th.Accent   end end
+    for _, o in ipairs(reg.accentIcons)   do if o and o.Parent then o.ImageColor3      = th.Accent   end end
+    for _, o in ipairs(reg.sliderFills)   do if o and o.Parent then o.BackgroundColor3 = th.Accent   end end
+    for _, o in ipairs(reg.sliderHandles) do if o and o.Parent then o.BackgroundColor3 = th.Text     end end
+    for _, o in ipairs(reg.scrollBars)    do if o and o.Parent then o.ScrollBarImageColor3 = th.Accent end end
+    for _, d in ipairs(reg.pills) do
+        local pill, getState = d[1], d[2]
+        if pill and pill.Parent then pill.BackgroundColor3 = getState() and th.ToggleOn or th.ToggleOff end
+    end
+    for _, d in ipairs(reg.sidebarBtns) do
+        local btn, name = d[1], d[2]
+        if btn and btn.Parent then
+            if name == _G.__activeTabName then
+                btn.BackgroundColor3 = th.Accent
+                btn.BackgroundTransparency = 0
+                btn.TextColor3 = th.Background
+            else
+                btn.BackgroundColor3 = th.Panel
+                btn.BackgroundTransparency = 0.35
+                btn.TextColor3 = th.Text
+            end
+        end
+    end
+    if fovCircle then fovCircle.Color = th.Accent end
+    if refreshPlayerList then pcall(refreshPlayerList) end
+end
+
 local AimbotSettings = {
-    Enabled     = false,
-    FOV         = 150,
-    Smoothing   = 0.35,
-    WallCheck   = false,
+    Enabled = false,
+    SilentAim = false,
+    FOV = 150,
+    Smoothing = 0.35,
+    WallCheck = false,
     MaxDistance = 150,
-    Target      = "Head",
-    ShowFOV     = false,
-    TeamCheck   = false,
-    RotateRig   = true,
+    Target = "Head",
+    ShowFOV = false,
+    TeamCheck = false,
+    RotateRig = true,
+    TriggerBot = false,
+    TriggerRange = 150,
+    AutoFire = false,
 }
 
-local VisualSettings = {
-    RivalsESP     = false,
-    TeamHighlight = false,
-    NameTags      = false,
-}
-
-local MiscSettings     = { InfJump = false, AntiAFK = false }
+local VisualSettings = { RivalsESP = false, NameTags = false }
+local MiscSettings = { InfJump = false, AntiAFK = false }
 local MovementSettings = { Noclip = false, God = false }
 
-local Colors = {
-    Background    = Color3.fromRGB(0, 0, 0),
-    Accent        = Color3.fromRGB(0, 255, 63),
-    Text          = Color3.fromRGB(255, 255, 255),
-    TextSecondary = Color3.fromRGB(180, 180, 180),
-    Hover         = Color3.fromRGB(20, 20, 20),
-    ToggleOn      = Color3.fromRGB(0, 255, 63),
-    ToggleOff     = Color3.fromRGB(40, 40, 40),
-}
+local Configs = { [1] = nil, [2] = nil, [3] = nil }
 
 local openDropdowns = {}
-
 local function closeAllDropdowns()
-    for _, fn in ipairs(openDropdowns) do
-        pcall(fn)
-    end
+    for _, fn in ipairs(openDropdowns) do pcall(fn) end
     openDropdowns = {}
 end
 
@@ -63,11 +181,11 @@ local teamCache, teamCacheTime = {}, {}
 local function normalizeTeam(v)
     if v == nil then return nil end
     local t = typeof(v)
-    if t == "Instance"   then return v end
-    if t == "Color3"     then return string.format("c:%.3f:%.3f:%.3f", v.R, v.G, v.B) end
+    if t == "Instance" then return v end
+    if t == "Color3" then return string.format("c:%.3f:%.3f:%.3f", v.R, v.G, v.B) end
     if t == "BrickColor" then return "b:" .. v.Name end
-    if t == "string"     then return v == "" and nil or "s:" .. v end
-    if t == "number"     then return "n:" .. tostring(v) end
+    if t == "string" then return v == "" and nil or "s:" .. v end
+    if t == "number" then return "n:" .. tostring(v) end
     return nil
 end
 
@@ -258,73 +376,65 @@ end
 local function rotateRigTowards(part)
     if not AimbotSettings.RotateRig then return end
     if not part or not part.Parent then return end
-
     local char = LocalPlayer.Character
     if not char then return end
-
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
-
     local myPos = hrp.Position
     local targetPos = part.Position
-
     local deltaX = targetPos.X - myPos.X
     local deltaZ = targetPos.Z - myPos.Z
-
     local desiredYaw = math.atan2(-deltaX, -deltaZ)
     local currentYaw = math.atan2(-hrp.CFrame.LookVector.X, -hrp.CFrame.LookVector.Z)
-
-    local diff = math.atan2(
-        math.sin(desiredYaw - currentYaw),
-        math.cos(desiredYaw - currentYaw)
-    )
-
+    local diff = math.atan2(math.sin(desiredYaw - currentYaw), math.cos(desiredYaw - currentYaw))
     local newYaw = currentYaw + diff * math.clamp(AimbotSettings.Smoothing * 1.5, 0, 1)
-
-    local look  = Vector3.new(-math.sin(newYaw), 0, -math.cos(newYaw))
+    local look = Vector3.new(-math.sin(newYaw), 0, -math.cos(newYaw))
     local right = Vector3.new(math.cos(newYaw), 0, -math.sin(newYaw))
-
-    hrp.CFrame = CFrame.fromMatrix(
-        hrp.CFrame.Position,
-        right,
-        Vector3.new(0, 1, 0),
-        -look
-    )
+    hrp.CFrame = CFrame.fromMatrix(hrp.CFrame.Position, right, Vector3.new(0, 1, 0), -look)
 end
 
 local function aimViaMouse(part)
     if not part or not part.Parent then return end
     if not mousemoverel then return end
-
     local camera = workspace.CurrentCamera
     if not camera then return end
-
     local screenPos = camera:WorldToViewportPoint(part.Position)
     if not screenPos then return end
-
     local vp = camera.ViewportSize
     local centerX = vp.X / 2
     local centerY = vp.Y / 2
-
     local deltaX = screenPos.X - centerX
     local deltaY = screenPos.Y - centerY
-
     local dist = math.sqrt(deltaX * deltaX + deltaY * deltaY)
     if dist < 1 then return end
-
     local smooth = AimbotSettings.Smoothing
     if smooth <= 0 then smooth = 1 end
-
     local moveX = deltaX * smooth
     local moveY = deltaY * smooth
-
-    if dist > 200 then
-        moveX = moveX * 0.7
-        moveY = moveY * 0.7
-    end
-
+    if dist > 200 then moveX = moveX * 0.7; moveY = moveY * 0.7 end
     rotateRigTowards(part)
     pcall(mousemoverel, moveX, moveY)
+end
+
+local silentAimEnabled = false
+local mt = getrawmetatable and getrawmetatable(game)
+if mt and setreadonly and hookmetamethod then
+    setreadonly(mt, false)
+    local oldNamecall = mt.__namecall
+    mt.__namecall = hookmetamethod(game, "__namecall", function(self, ...)
+        local method = getnamecallmethod()
+        if silentAimEnabled and (method == "FindPartOnRay" or method == "FindPartOnRayWithIgnoreList") then
+            local crosshair = getCrosshairPosition()
+            local target = getAimTarget(crosshair)
+            if target then
+                local camera = workspace.CurrentCamera
+                local newRay = Ray.new(camera.CFrame.Position, (target.Position - camera.CFrame.Position).Unit * 1000)
+                return oldNamecall(self, newRay, ...)
+            end
+        end
+        return oldNamecall(self, ...)
+    end)
+    setreadonly(mt, true)
 end
 
 local fovCircle = nil
@@ -332,7 +442,7 @@ pcall(function()
     if Drawing then
         fovCircle = Drawing.new("Circle")
         fovCircle.Thickness = 2
-        fovCircle.Color = Color3.fromRGB(0, 255, 63)
+        fovCircle.Color = Colors.Accent
         fovCircle.Filled = false
         fovCircle.Visible = false
         fovCircle.NumSides = 60
@@ -346,27 +456,12 @@ local function makeCorner(p, r)
     return c
 end
 
-local function makeStroke(p, color, thickness, transparency)
-    local s = Instance.new("UIStroke")
-    s.Color = color or Colors.Accent
-    s.Thickness = thickness or 1
-    s.Transparency = transparency or 0.5
-    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    s.Parent = p
-    return s
-end
-
-local function getHRP()
-    local c = LocalPlayer.Character
-    return c and c:FindFirstChild("HumanoidRootPart")
-end
-
-local function getHumanoid()
-    local c = LocalPlayer.Character
-    return c and c:FindFirstChildOfClass("Humanoid")
-end
+local function getHRP() local c = LocalPlayer.Character; return c and c:FindFirstChild("HumanoidRootPart") end
+local function getHumanoid() local c = LocalPlayer.Character; return c and c:FindFirstChildOfClass("Humanoid") end
 
 local noclipConn, godConn, antiAFKConn = nil, nil, nil
+local triggerBotConn = nil
+local autoFireConn = nil
 
 UserInputService.JumpRequest:Connect(function()
     if MiscSettings.InfJump then
@@ -387,10 +482,9 @@ local RivalsESP = {
 }
 
 local ESP_COLORS = {
-    Enemy   = Color3.fromRGB(255, 60, 60),
-    Ally    = Color3.fromRGB(60, 160, 255),
-    Self    = Color3.fromRGB(0, 255, 63),
-    Neutral = Color3.fromRGB(255, 255, 255),
+    Enemy = Color3.fromRGB(255, 60, 60),
+    Ally = Color3.fromRGB(60, 160, 255),
+    Self = Color3.fromRGB(0, 255, 63),
 }
 
 local function getRivalsESPColor(plr)
@@ -423,7 +517,7 @@ local function applyRivalsESP(plr)
 
     if not RivalsESP.highlights[plr] then
         local h = Instance.new("Highlight")
-        h.Name = "HHB_ESP_Rivals"
+        h.Name = "HappyHub_ESP"
         h.FillColor = color
         h.OutlineColor = color
         h.FillTransparency = 0.35
@@ -441,7 +535,7 @@ local function applyRivalsESP(plr)
             local hrp = char:FindFirstChild("HumanoidRootPart")
             if hrp then
                 local bb = Instance.new("BillboardGui")
-                bb.Name = "HHB_NameTag"
+                bb.Name = "HappyHub_NameTag"
                 bb.Size = UDim2.new(0, 120, 0, 34)
                 bb.StudsOffset = Vector3.new(0, 3.5, 0)
                 bb.AlwaysOnTop = true
@@ -485,9 +579,7 @@ local function startRivalsESP()
         RivalsESP.updateThread = task.spawn(function()
             while RivalsESP.active do
                 task.wait(0.5)
-                if RivalsESP.active then
-                    refreshAllRivalsESP()
-                end
+                if RivalsESP.active then refreshAllRivalsESP() end
             end
             RivalsESP.updateThread = nil
         end)
@@ -501,9 +593,7 @@ local function stopRivalsESP()
         task.cancel(RivalsESP.updateThread)
         RivalsESP.updateThread = nil
     end
-    for _, plr in ipairs(Players:GetPlayers()) do
-        clearRivalsHighlight(plr)
-    end
+    for _, plr in ipairs(Players:GetPlayers()) do clearRivalsHighlight(plr) end
 end
 
 local function startNameTagUpdater()
@@ -539,15 +629,19 @@ Players.PlayerAdded:Connect(function(plr)
         task.wait(0.5)
         if RivalsESP.active then applyRivalsESP(plr) end
     end)
+    task.wait(0.5)
+    if refreshPlayerList then pcall(refreshPlayerList) end
 end)
 
 Players.PlayerRemoving:Connect(function(plr)
     clearRivalsHighlight(plr)
+    task.wait(0.2)
+    if refreshPlayerList then pcall(refreshPlayerList) end
 end)
 
 local NotifGui = Instance.new("ScreenGui")
 NotifGui.Name = "HappyHubNotifications"
-NotifGui.Parent = game:GetService("CoreGui")
+NotifGui.Parent = (gethui and pcall(gethui) and gethui()) or game:GetService("CoreGui")
 NotifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 NotifGui.DisplayOrder = 500
 NotifGui.IgnoreGuiInset = true
@@ -576,13 +670,12 @@ local function Notify(text, duration)
     local frame = Instance.new("Frame")
     frame.Name = "Notification"
     frame.Size = UDim2.new(1, 0, 0, 56)
-    frame.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+    frame.BackgroundColor3 = Colors.Panel
     frame.BackgroundTransparency = 0.1
     frame.BorderSizePixel = 0
     frame.LayoutOrder = notifOrder
     frame.Parent = NotifContainer
     makeCorner(frame, 8)
-    makeStroke(frame, Colors.Accent, 1, 0.7)
 
     local accent = Instance.new("Frame")
     accent.Size = UDim2.new(0, 3, 1, -16)
@@ -680,14 +773,13 @@ end
 _G.HappyHubNotify = Notify
 
 local typingTokens = {}
-
 local function registerTyping(label, fullText, speed)
     if not label or not fullText then return end
     table.insert(typingTokens, {
-        Label    = label,
+        Label = label,
         FullText = fullText,
-        Speed    = speed or 0.02,
-        Token    = {},
+        Speed = speed or 0.02,
+        Token = {},
     })
 end
 
@@ -723,10 +815,10 @@ end
 
 local CSGOHub = {}
 
-function CSGOHub:CreateWindow(title)
+function CSGOHub:CreateWindow(title, subtitle)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "HappyHub"
-    ScreenGui.Parent = game:GetService("CoreGui")
+    ScreenGui.Parent = (gethui and pcall(gethui) and gethui()) or game:GetService("CoreGui")
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.DisplayOrder = 100
     ScreenGui.IgnoreGuiInset = true
@@ -746,7 +838,7 @@ function CSGOHub:CreateWindow(title)
     MainFrame.ZIndex = 1
     MainFrame.Parent = ScreenGui
     makeCorner(MainFrame, 12)
-    makeStroke(MainFrame, Colors.Accent, 1, 0.7)
+    reg.mainFrame = MainFrame
 
     local Shadow = Instance.new("ImageLabel")
     Shadow.Name = "Shadow"
@@ -766,19 +858,20 @@ function CSGOHub:CreateWindow(title)
     TopBar.Name = "TopBar"
     TopBar.Size = UDim2.new(1, 0, 0, 56)
     TopBar.Position = UDim2.new(0, 0, 0, 0)
-    TopBar.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+    TopBar.BackgroundColor3 = Colors.Panel
     TopBar.BackgroundTransparency = 0.1
     TopBar.BorderSizePixel = 0
     TopBar.Active = true
     TopBar.ZIndex = 2
     TopBar.Parent = MainFrame
     makeCorner(TopBar, 12)
+    register(reg.panels, TopBar)
 
     local TopBarGradient = Instance.new("UIGradient")
     TopBarGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
+        ColorSequenceKeypoint.new(0, Colors.Panel),
         ColorSequenceKeypoint.new(0.5, Colors.Accent),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0)),
+        ColorSequenceKeypoint.new(1, Colors.Panel),
     })
     TopBarGradient.Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
@@ -791,11 +884,12 @@ function CSGOHub:CreateWindow(title)
     local TopBarMask = Instance.new("Frame")
     TopBarMask.Size = UDim2.new(1, 0, 0, 12)
     TopBarMask.Position = UDim2.new(0, 0, 1, -12)
-    TopBarMask.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+    TopBarMask.BackgroundColor3 = Colors.Panel
     TopBarMask.BackgroundTransparency = 0.1
     TopBarMask.BorderSizePixel = 0
     TopBarMask.ZIndex = 3
     TopBarMask.Parent = TopBar
+    register(reg.panels, TopBarMask)
 
     local TopIcon = Instance.new("ImageLabel")
     TopIcon.Name = "TopIcon"
@@ -803,21 +897,39 @@ function CSGOHub:CreateWindow(title)
     TopIcon.Position = UDim2.new(0, 16, 0.5, -16)
     TopIcon.BackgroundTransparency = 1
     TopIcon.Image = MAIN_ICON
+    TopIcon.ImageColor3 = Colors.Accent
     TopIcon.ZIndex = 4
     TopIcon.Parent = TopBar
     makeCorner(TopIcon, 8)
+    register(reg.accentIcons, TopIcon)
 
     local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Size = UDim2.new(1, -140, 1, 0)
-    TitleLabel.Position = UDim2.new(0, 58, 0, 0)
+    TitleLabel.Name = "Title"
+    TitleLabel.Size = UDim2.new(1, -160, 0, 18)
+    TitleLabel.Position = UDim2.new(0, 58, 0, 10)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Font = Enum.Font.GothamBold
-    TitleLabel.TextSize = 18
+    TitleLabel.TextSize = 16
     TitleLabel.TextColor3 = Colors.Text
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Text = title or "Happy Hub"
     TitleLabel.ZIndex = 4
     TitleLabel.Parent = TopBar
+    register(reg.texts, TitleLabel)
+
+    local SubTitleLabel = Instance.new("TextLabel")
+    SubTitleLabel.Name = "SubTitle"
+    SubTitleLabel.Size = UDim2.new(1, -160, 0, 14)
+    SubTitleLabel.Position = UDim2.new(0, 58, 0, 30)
+    SubTitleLabel.BackgroundTransparency = 1
+    SubTitleLabel.Font = Enum.Font.Gotham
+    SubTitleLabel.TextSize = 10
+    SubTitleLabel.TextColor3 = Colors.TextSecondary
+    SubTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    SubTitleLabel.Text = subtitle or "Rivals Edition · Keyless"
+    SubTitleLabel.ZIndex = 4
+    SubTitleLabel.Parent = TopBar
+    register(reg.subtexts, SubTitleLabel)
 
     local MinimizeButton = Instance.new("TextButton")
     MinimizeButton.Size = UDim2.new(0, 32, 0, 32)
@@ -829,6 +941,7 @@ function CSGOHub:CreateWindow(title)
     MinimizeButton.ZIndex = 4
     MinimizeButton.Parent = TopBar
     makeCorner(MinimizeButton, 8)
+    register(reg.panels, MinimizeButton)
 
     local MinimizeIcon = Instance.new("ImageLabel")
     MinimizeIcon.Size = UDim2.fromOffset(16, 16)
@@ -849,6 +962,7 @@ function CSGOHub:CreateWindow(title)
     CloseButton.ZIndex = 4
     CloseButton.Parent = TopBar
     makeCorner(CloseButton, 8)
+    register(reg.panels, CloseButton)
 
     local CloseIcon = Instance.new("ImageLabel")
     CloseIcon.Size = UDim2.fromOffset(16, 16)
@@ -862,13 +976,15 @@ function CSGOHub:CreateWindow(title)
     local TabContainer = Instance.new("Frame")
     TabContainer.Size = UDim2.new(0, 200, 1, -145)
     TabContainer.Position = UDim2.new(0, 8, 0, 61)
-    TabContainer.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+    TabContainer.BackgroundColor3 = Colors.Panel
     TabContainer.BackgroundTransparency = 0.2
     TabContainer.BorderSizePixel = 0
     TabContainer.ClipsDescendants = true
     TabContainer.ZIndex = 2
     TabContainer.Parent = MainFrame
     makeCorner(TabContainer, 10)
+    register(reg.panels, TabContainer)
+    reg.tabContainer = TabContainer
 
     local ContentArea = Instance.new("Frame")
     ContentArea.Size = UDim2.new(1, -224, 1, -73)
@@ -880,18 +996,21 @@ function CSGOHub:CreateWindow(title)
     ContentArea.ZIndex = 2
     ContentArea.Parent = MainFrame
     makeCorner(ContentArea, 10)
+    register(reg.panels, ContentArea)
+    reg.contentArea = ContentArea
 
     local PlayerCard = Instance.new("Frame")
     PlayerCard.Name = "PlayerCard"
     PlayerCard.Size = UDim2.new(0, 200, 0, 64)
     PlayerCard.Position = UDim2.new(0, 8, 1, -72)
-    PlayerCard.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+    PlayerCard.BackgroundColor3 = Colors.Panel
     PlayerCard.BackgroundTransparency = 0.15
     PlayerCard.BorderSizePixel = 0
     PlayerCard.ZIndex = 5
     PlayerCard.Parent = MainFrame
     makeCorner(PlayerCard, 10)
-    makeStroke(PlayerCard, Colors.Accent, 1, 0.7)
+    register(reg.panels, PlayerCard)
+    reg.playerCard = PlayerCard
 
     local pfpFrame = Instance.new("Frame")
     pfpFrame.Size = UDim2.fromOffset(44, 44)
@@ -918,11 +1037,6 @@ function CSGOHub:CreateWindow(title)
     onlineDot.Parent = pfpFrame
     makeCorner(onlineDot, 6)
 
-    local onlineDotStroke = Instance.new("UIStroke")
-    onlineDotStroke.Color = Color3.fromRGB(8, 8, 8)
-    onlineDotStroke.Thickness = 2
-    onlineDotStroke.Parent = onlineDot
-
     local pfpName = Instance.new("TextLabel")
     pfpName.Size = UDim2.new(1, -72, 0, 18)
     pfpName.Position = UDim2.new(0, 62, 0, 14)
@@ -934,6 +1048,7 @@ function CSGOHub:CreateWindow(title)
     pfpName.TextTruncate = Enum.TextTruncate.AtEnd
     pfpName.Text = LocalPlayer.DisplayName
     pfpName.Parent = PlayerCard
+    register(reg.texts, pfpName)
 
     local pfpUser = Instance.new("TextLabel")
     pfpUser.Size = UDim2.new(1, -72, 0, 14)
@@ -946,43 +1061,26 @@ function CSGOHub:CreateWindow(title)
     pfpUser.TextTruncate = Enum.TextTruncate.AtEnd
     pfpUser.Text = "@" .. LocalPlayer.Name
     pfpUser.Parent = PlayerCard
+    register(reg.subtexts, pfpUser)
 
     task.spawn(function()
-        local success, thumb = pcall(function()
+        local ok, thumb = pcall(function()
             return Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
         end)
-        if success then
-            pfp.Image = thumb
-        end
-    end)
-
-    local function updatePlayerCard()
-        task.spawn(function()
-            local success, thumb = pcall(function()
-                return Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
-            end)
-            if success then pfp.Image = thumb end
-        end)
-        pfpName.Text = LocalPlayer.DisplayName
-        pfpUser.Text = "@" .. LocalPlayer.Name
-    end
-
-    LocalPlayer.CharacterAdded:Connect(function()
-        task.wait(0.5)
-        updatePlayerCard()
+        if ok then pfp.Image = thumb end
     end)
 
     local KeybindsPanel = Instance.new("Frame")
     KeybindsPanel.Name = "KeybindsPanel"
     KeybindsPanel.Size = UDim2.new(0, 140, 0, 128)
     KeybindsPanel.Position = UDim2.new(1, 10, 0, 70)
-    KeybindsPanel.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+    KeybindsPanel.BackgroundColor3 = Colors.Panel
     KeybindsPanel.BackgroundTransparency = 0.15
     KeybindsPanel.BorderSizePixel = 0
     KeybindsPanel.ZIndex = 5
     KeybindsPanel.Parent = MainFrame
     makeCorner(KeybindsPanel, 10)
-    makeStroke(KeybindsPanel, Colors.Accent, 1, 0.7)
+    register(reg.panels, KeybindsPanel)
 
     local KeybindsTitle = Instance.new("TextLabel")
     KeybindsTitle.Size = UDim2.new(1, -16, 0, 20)
@@ -995,6 +1093,7 @@ function CSGOHub:CreateWindow(title)
     KeybindsTitle.Text = "LEFT KEYBINDS"
     KeybindsTitle.ZIndex = 6
     KeybindsTitle.Parent = KeybindsPanel
+    register(reg.accentTexts, KeybindsTitle)
 
     local function makeKeybindRow(parent, key, label, order)
         local row = Instance.new("Frame")
@@ -1016,6 +1115,7 @@ function CSGOHub:CreateWindow(title)
         keyBadge.ZIndex = 6
         keyBadge.Parent = row
         makeCorner(keyBadge, 4)
+        register(reg.accentBgs, keyBadge)
 
         local lbl = Instance.new("TextLabel")
         lbl.Size = UDim2.new(1, -28, 1, 0)
@@ -1028,6 +1128,7 @@ function CSGOHub:CreateWindow(title)
         lbl.Text = label
         lbl.ZIndex = 6
         lbl.Parent = row
+        register(reg.subtexts, lbl)
     end
 
     makeKeybindRow(KeybindsPanel, "T", "Toggle Aimbot", 1)
@@ -1046,17 +1147,18 @@ function CSGOHub:CreateWindow(title)
     DragBar.ZIndex = 4
     DragBar.Parent = MainFrame
     makeCorner(DragBar, 2)
+    register(reg.accentBgs, DragBar)
 
     local window = {
-        ScreenGui    = ScreenGui,
-        MainFrame    = MainFrame,
+        ScreenGui = ScreenGui,
+        MainFrame = MainFrame,
         TabContainer = TabContainer,
-        ContentArea  = ContentArea,
-        PlayerCard   = PlayerCard,
-        Tabs         = {},
-        ActiveTab    = nil,
-        IsVisible    = true,
-        Minimized    = false,
+        ContentArea = ContentArea,
+        PlayerCard = PlayerCard,
+        Tabs = {},
+        ActiveTab = nil,
+        IsVisible = true,
+        Minimized = false,
     }
 
     local dragging, dragStart, startPos = false, nil, nil
@@ -1071,16 +1173,12 @@ function CSGOHub:CreateWindow(title)
         if not dragging then return end
         local delta = input.Position - dragStart
         MainFrame.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
         )
     end
 
-    local function endDrag()
-        dragging = false
-    end
+    local function endDrag() dragging = false end
 
     TopBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1
@@ -1144,15 +1242,35 @@ function CSGOHub:CreateWindow(title)
     MinimizeButton.MouseLeave:Connect(function()
         TweenService:Create(MinimizeButton, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(15, 15, 15)}):Play()
     end)
+
     MinimizeButton.MouseButton1Click:Connect(function()
         closeAllDropdowns()
         window.Minimized = not window.Minimized
-        local target = window.Minimized and UDim2.new(0, 700, 0, 56) or UDim2.new(0, 700, 0, 450)
-        TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = target}):Play()
+        if window.Minimized then
+            TabContainer.Visible = false
+            ContentArea.Visible = false
+            PlayerCard.Visible = false
+            KeybindsPanel.Visible = false
+            DragBar.Visible = false
+            TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 700, 0, 56)
+            }):Play()
+        else
+            TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 700, 0, 450)
+            }):Play()
+            task.wait(0.35)
+            TabContainer.Visible = true
+            ContentArea.Visible = true
+            PlayerCard.Visible = true
+            KeybindsPanel.Visible = true
+            DragBar.Visible = true
+        end
     end)
 
     UserInputService.InputBegan:Connect(function(input, gp)
         if gp then return end
+        if UserInputService:GetFocusedTextBox() then return end
         if input.KeyCode == Enum.KeyCode.F3 then
             closeAllDropdowns()
             if window.IsVisible then hideUI() else showUI() end
@@ -1163,12 +1281,12 @@ function CSGOHub:CreateWindow(title)
         local TabButton = Instance.new("TextButton")
         TabButton.Size = UDim2.new(1, -20, 0, 40)
         TabButton.Position = UDim2.new(0, 10, 0, 10 + (#self.Tabs * 50))
-        TabButton.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
-        TabButton.BackgroundTransparency = 0.3
+        TabButton.BackgroundColor3 = Colors.Panel
+        TabButton.BackgroundTransparency = 0.35
         TabButton.BorderSizePixel = 0
         TabButton.Font = Enum.Font.GothamSemibold
         TabButton.TextSize = 15
-        TabButton.TextColor3 = Colors.TextSecondary
+        TabButton.TextColor3 = Colors.Text
         TabButton.Text = ""
         TabButton.TextXAlignment = Enum.TextXAlignment.Left
         TabButton.AutoButtonColor = false
@@ -1186,6 +1304,7 @@ function CSGOHub:CreateWindow(title)
         icon.ScaleType = Enum.ScaleType.Fit
         icon.ZIndex = 4
         icon.Parent = TabButton
+        register(reg.accentIcons, icon)
 
         local txt = Instance.new("TextLabel")
         txt.Name = "TabText"
@@ -1194,11 +1313,12 @@ function CSGOHub:CreateWindow(title)
         txt.BackgroundTransparency = 1
         txt.Font = Enum.Font.GothamSemibold
         txt.TextSize = 15
-        txt.TextColor3 = Colors.TextSecondary
+        txt.TextColor3 = Colors.Text
         txt.TextXAlignment = Enum.TextXAlignment.Left
         txt.Text = name
         txt.ZIndex = 4
         txt.Parent = TabButton
+        register(reg.texts, txt)
 
         local TabContent = Instance.new("ScrollingFrame")
         TabContent.Size = UDim2.new(1, -8, 1, -8)
@@ -1208,37 +1328,39 @@ function CSGOHub:CreateWindow(title)
         TabContent.ScrollBarThickness = 4
         TabContent.ScrollBarImageColor3 = Colors.Accent
         TabContent.CanvasSize = UDim2.new(0, 0, 0, 0)
+        TabContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
         TabContent.ClipsDescendants = true
         TabContent.ZIndex = 3
         TabContent.Parent = self.ContentArea
         TabContent.Visible = false
         makeCorner(TabContent, 8)
+        register(reg.scrollBars, TabContent)
 
         local tab = {
-            Button   = TabButton,
-            Content  = TabContent,
+            Button = TabButton,
+            Content = TabContent,
             Elements = {},
-            YOffset  = 20,
-            Name     = name,
-            TextRef  = txt,
-            IconRef  = icon,
+            YOffset = 20,
+            Name = name,
+            TextRef = txt,
+            IconRef = icon,
         }
 
         TabButton.MouseEnter:Connect(function()
             if self.ActiveTab ~= tab then
-                TweenService:Create(TabButton, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(20, 20, 20)}):Play()
+                TweenService:Create(TabButton, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Hover}):Play()
             end
         end)
         TabButton.MouseLeave:Connect(function()
             if self.ActiveTab ~= tab then
-                TweenService:Create(TabButton, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(5, 5, 5)}):Play()
+                TweenService:Create(TabButton, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Panel}):Play()
             end
         end)
-        TabButton.MouseButton1Click:Connect(function()
-            self:SelectTab(tab)
-        end)
+        TabButton.MouseButton1Click:Connect(function() self:SelectTab(tab) end)
 
         table.insert(self.Tabs, tab)
+        register(reg.sidebarBtns, {TabButton, name})
+
         if #self.Tabs == 1 then self:SelectTab(tab) end
         return tab
     end
@@ -1246,27 +1368,23 @@ function CSGOHub:CreateWindow(title)
     function window:SelectTab(tab)
         closeAllDropdowns()
         if self.ActiveTab then
-            self.ActiveTab.Button.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+            self.ActiveTab.Button.BackgroundColor3 = Colors.Panel
             self.ActiveTab.Button.BackgroundTransparency = 0.3
-            if self.ActiveTab.TextRef then
-                self.ActiveTab.TextRef.TextColor3 = Colors.TextSecondary
-            end
+            if self.ActiveTab.TextRef then self.ActiveTab.TextRef.TextColor3 = Colors.TextSecondary end
             if self.ActiveTab.IconRef then
                 TweenService:Create(self.ActiveTab.IconRef, TweenInfo.new(0.15), {ImageColor3 = Colors.TextSecondary}):Play()
             end
             self.ActiveTab.Content.Visible = false
         end
         self.ActiveTab = tab
-        tab.Button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        _G.__activeTabName = tab.Name
+        tab.Button.BackgroundColor3 = Colors.Background
         tab.Button.BackgroundTransparency = 0
-        if tab.TextRef then
-            tab.TextRef.TextColor3 = Colors.Accent
-        end
+        if tab.TextRef then tab.TextRef.TextColor3 = Colors.Accent end
         if tab.IconRef then
             TweenService:Create(tab.IconRef, TweenInfo.new(0.15), {ImageColor3 = Colors.Accent}):Play()
         end
         tab.Content.Visible = true
-
         stopAllTyping()
         task.wait(0.03)
         playTyping(tab)
@@ -1281,6 +1399,10 @@ function CSGOHub:CreateWindow(title)
         return el
     end
 
+    window._addElement = addElement
+    window._register = register
+    window._reg = reg
+
     function window:CreateLabel(tab, text)
         local l = Instance.new("TextLabel")
         l.Size = UDim2.new(1, -40, 0, 25)
@@ -1291,6 +1413,7 @@ function CSGOHub:CreateWindow(title)
         l.TextXAlignment = Enum.TextXAlignment.Left
         l.Text = text
         l.ZIndex = 3
+        register(reg.accentTexts, l)
         registerTyping(l, text)
         return addElement(tab, l)
     end
@@ -1298,7 +1421,7 @@ function CSGOHub:CreateWindow(title)
     function window:CreateButton(tab, text, cb)
         local b = Instance.new("TextButton")
         b.Size = UDim2.new(1, -40, 0, 35)
-        b.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+        b.BackgroundColor3 = Colors.Panel
         b.BackgroundTransparency = 0.3
         b.BorderSizePixel = 0
         b.Font = Enum.Font.GothamSemibold
@@ -1308,11 +1431,13 @@ function CSGOHub:CreateWindow(title)
         b.AutoButtonColor = false
         b.ZIndex = 3
         makeCorner(b, 8)
+        register(reg.panels, b)
+        register(reg.texts, b)
         b.MouseEnter:Connect(function()
             TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Hover}):Play()
         end)
         b.MouseLeave:Connect(function()
-            TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(5,5,5)}):Play()
+            TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Panel}):Play()
         end)
         b.MouseButton1Click:Connect(function() if cb then cb() end end)
         registerTyping(b, text)
@@ -1335,6 +1460,7 @@ function CSGOHub:CreateWindow(title)
         l.Text = text
         l.ZIndex = 3
         l.Parent = c
+        register(reg.texts, l)
         registerTyping(l, text)
 
         local t = Instance.new("TextButton")
@@ -1349,7 +1475,6 @@ function CSGOHub:CreateWindow(title)
         makeCorner(t, 8)
 
         local state = default or false
-
         local function setVisual(v)
             state = v
             t.BackgroundColor3 = v and Colors.ToggleOn or Colors.ToggleOff
@@ -1360,6 +1485,7 @@ function CSGOHub:CreateWindow(title)
             if cb then cb(state) end
         end)
         addElement(tab, c)
+        register(reg.pills, {t, function() return state end})
         return {
             SetState = function(v, silent)
                 setVisual(v)
@@ -1385,12 +1511,13 @@ function CSGOHub:CreateWindow(title)
         l.Text = text .. ": " .. tostring(default)
         l.ZIndex = 3
         l.Parent = c
+        register(reg.texts, l)
         registerTyping(l, text .. ": " .. tostring(default))
 
         local sf = Instance.new("Frame")
         sf.Size = UDim2.new(1, 0, 0, 6)
         sf.Position = UDim2.new(0, 0, 1, -15)
-        sf.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+        sf.BackgroundColor3 = Colors.ToggleOff
         sf.BorderSizePixel = 0
         sf.ZIndex = 3
         sf.Parent = c
@@ -1403,17 +1530,19 @@ function CSGOHub:CreateWindow(title)
         f.ZIndex = 3
         f.Parent = sf
         makeCorner(f, 3)
+        register(reg.sliderFills, f)
 
         local k = Instance.new("TextButton")
         k.Size = UDim2.fromOffset(14, 14)
         k.Position = UDim2.new((default-min)/(max-min), -7, 0.5, -7)
-        k.BackgroundColor3 = Colors.Accent
+        k.BackgroundColor3 = Colors.Text
         k.BorderSizePixel = 0
         k.Text = ""
         k.AutoButtonColor = false
         k.ZIndex = 4
         k.Parent = sf
         makeCorner(k, 7)
+        register(reg.sliderHandles, k)
 
         local val = default
         local drag = false
@@ -1431,15 +1560,11 @@ function CSGOHub:CreateWindow(title)
 
         k.InputBegan:Connect(function(i)
             if i.UserInputType == Enum.UserInputType.MouseButton1
-            or i.UserInputType == Enum.UserInputType.Touch then
-                drag = true
-            end
+            or i.UserInputType == Enum.UserInputType.Touch then drag = true end
         end)
         UserInputService.InputEnded:Connect(function(i)
             if i.UserInputType == Enum.UserInputType.MouseButton1
-            or i.UserInputType == Enum.UserInputType.Touch then
-                drag = false
-            end
+            or i.UserInputType == Enum.UserInputType.Touch then drag = false end
         end)
         UserInputService.InputChanged:Connect(function(i)
             if drag and (i.UserInputType == Enum.UserInputType.MouseMovement
@@ -1449,6 +1574,18 @@ function CSGOHub:CreateWindow(title)
         end)
 
         addElement(tab, c)
+        return {
+            SetValue = function(v)
+                v = math.clamp(v, min, max)
+                val = v
+                local p = (v - min) / (max - min)
+                f.Size = UDim2.new(p, 0, 1, 0)
+                k.Position = UDim2.new(p, -7, 0.5, -7)
+                l.Text = text .. ": " .. tostring(v)
+                if cb then cb(v) end
+            end,
+            GetValue = function() return val end,
+        }
     end
 
     function window:CreateDropdown(tab, text, options, default, cb)
@@ -1469,12 +1606,13 @@ function CSGOHub:CreateWindow(title)
         l.Text = text
         l.ZIndex = 10
         l.Parent = c
+        register(reg.texts, l)
         registerTyping(l, text)
 
         local b = Instance.new("TextButton")
         b.Size = UDim2.new(0.5, -10, 0, 40)
         b.Position = UDim2.new(0.5, 10, 0, 10)
-        b.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+        b.BackgroundColor3 = Colors.Panel
         b.BackgroundTransparency = 0.3
         b.BorderSizePixel = 0
         b.Font = Enum.Font.GothamSemibold
@@ -1485,11 +1623,13 @@ function CSGOHub:CreateWindow(title)
         b.ZIndex = 10
         b.Parent = c
         makeCorner(b, 8)
+        register(reg.panels, b)
+        register(reg.texts, b)
 
         local list = Instance.new("Frame")
         list.Size = UDim2.new(0.5, -10, 0, (#options * 36) + 10)
         list.Position = UDim2.new(0.5, 10, 1, 5)
-        list.BackgroundColor3 = Color3.fromRGB(3, 3, 3)
+        list.BackgroundColor3 = Colors.Panel
         list.BackgroundTransparency = 0.1
         list.BorderSizePixel = 0
         list.Visible = false
@@ -1497,7 +1637,7 @@ function CSGOHub:CreateWindow(title)
         list.ClipsDescendants = false
         list.Parent = c
         makeCorner(list, 8)
-        makeStroke(list, Colors.Accent, 1, 0.6)
+        register(reg.panels, list)
 
         local listPad = Instance.new("UIPadding")
         listPad.PaddingTop = UDim.new(0, 5)
@@ -1505,23 +1645,19 @@ function CSGOHub:CreateWindow(title)
         listPad.Parent = list
 
         local sel = default or options[1] or ""
-
-        local function closeDropdown()
-            list.Visible = false
-        end
-
+        local function closeDropdown() list.Visible = false end
         table.insert(openDropdowns, closeDropdown)
 
         for i, opt in ipairs(options) do
             local ob = Instance.new("TextButton")
             ob.Size = UDim2.new(1, -10, 0, 30)
             ob.Position = UDim2.new(0, 5, 0, 5 + ((i-1) * 36))
-            ob.BackgroundColor3 = (opt == sel) and Colors.Accent or Color3.fromRGB(8, 8, 8)
+            ob.BackgroundColor3 = (opt == sel) and Colors.Accent or Colors.Panel
             ob.BackgroundTransparency = (opt == sel) and 0 or 0.2
             ob.BorderSizePixel = 0
             ob.Font = Enum.Font.GothamSemibold
             ob.TextSize = 14
-            ob.TextColor3 = (opt == sel) and Color3.fromRGB(0, 0, 0) or Colors.Text
+            ob.TextColor3 = (opt == sel) and Colors.Background or Colors.Text
             ob.Text = opt
             ob.AutoButtonColor = false
             ob.ZIndex = 51
@@ -1530,12 +1666,12 @@ function CSGOHub:CreateWindow(title)
 
             ob.MouseEnter:Connect(function()
                 if ob.Text ~= sel then
-                    TweenService:Create(ob, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(20, 20, 20)}):Play()
+                    TweenService:Create(ob, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Hover}):Play()
                 end
             end)
             ob.MouseLeave:Connect(function()
                 if ob.Text ~= sel then
-                    TweenService:Create(ob, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(8, 8, 8)}):Play()
+                    TweenService:Create(ob, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Panel}):Play()
                 end
             end)
 
@@ -1548,9 +1684,9 @@ function CSGOHub:CreateWindow(title)
                         if ch.Text == sel then
                             ch.BackgroundColor3 = Colors.Accent
                             ch.BackgroundTransparency = 0
-                            ch.TextColor3 = Color3.fromRGB(0, 0, 0)
+                            ch.TextColor3 = Colors.Background
                         else
-                            ch.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+                            ch.BackgroundColor3 = Colors.Panel
                             ch.BackgroundTransparency = 0.2
                             ch.TextColor3 = Colors.Text
                         end
@@ -1564,45 +1700,44 @@ function CSGOHub:CreateWindow(title)
             TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Hover}):Play()
         end)
         b.MouseLeave:Connect(function()
-            TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(5, 5, 5)}):Play()
+            TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Panel}):Play()
         end)
 
         b.MouseButton1Click:Connect(function()
             local wasVisible = list.Visible
             closeAllDropdowns()
             if wasVisible then return end
-
             local listHeight = list.Size.Y.Offset + 8
             local tabContent = tab.Content
             local cAbsY = c.AbsolutePosition.Y
             local cAbsH = c.AbsoluteSize.Y
             local tabAbsY = tabContent.AbsolutePosition.Y
             local tabAbsH = tabContent.AbsoluteSize.Y
-
             local bottomSpace = (tabAbsY + tabAbsH) - (cAbsY + cAbsH)
-
             if bottomSpace < listHeight then
                 list.Position = UDim2.new(0.5, 10, 0, -listHeight + 5)
             else
                 list.Position = UDim2.new(0.5, 10, 1, 5)
             end
-
             list.Visible = true
         end)
 
         addElement(tab, c)
     end
 
+    window._applyTheme = applyTheme
     return window
 end
 
-local win = CSGOHub:CreateWindow("Happy Hub")
+local win = CSGOHub:CreateWindow("Happy Hub", "Rivals Edition · Keyless")
 
-local aimbotTab  = win:CreateTab("Aimbot", AIM_ICON)
+local aimbotTab = win:CreateTab("Aimbot", AIM_ICON)
 local visualsTab = win:CreateTab("Visuals", VIS_ICON)
-local miscTab    = win:CreateTab("Misc", MISC_ICON)
+local playerListTab = win:CreateTab("PlayerList", PLR_ICON)
+local configsTab = win:CreateTab("Configs", CFG_ICON)
+local miscTab = win:CreateTab("Misc", MISC_ICON)
 
-local aimbotToggleRef, espToggleRef, nametagToggleRef
+local aimbotToggleRef, espToggleRef
 
 win:CreateLabel(aimbotTab, "Aimbot Settings")
 
@@ -1619,30 +1754,69 @@ aimbotToggleRef = win:CreateToggle(aimbotTab, "Enabled (T)", AimbotSettings.Enab
     Notify(v and "Aimbot enabled" or "Aimbot disabled")
 end)
 
-win:CreateSlider(aimbotTab, "FOV", 20, 800, AimbotSettings.FOV, function(v)
-    AimbotSettings.FOV = v
+win:CreateToggle(aimbotTab, "Silent Aim", AimbotSettings.SilentAim, function(v)
+    AimbotSettings.SilentAim = v
+    silentAimEnabled = v
+    Notify(v and "Silent Aim on" or "Silent Aim off")
 end)
-win:CreateSlider(aimbotTab, "Smoothing", 0.05, 1, AimbotSettings.Smoothing, function(v)
-    AimbotSettings.Smoothing = v
-end)
-win:CreateSlider(aimbotTab, "Max Distance", 100, 2000, AimbotSettings.MaxDistance, function(v)
-    AimbotSettings.MaxDistance = v
-end)
-win:CreateToggle(aimbotTab, "Wall Check", AimbotSettings.WallCheck, function(v)
-    AimbotSettings.WallCheck = v
-end)
-win:CreateToggle(aimbotTab, "Team Check", AimbotSettings.TeamCheck, function(v)
-    AimbotSettings.TeamCheck = v
-end)
-win:CreateToggle(aimbotTab, "Show FOV Circle", AimbotSettings.ShowFOV, function(v)
-    AimbotSettings.ShowFOV = v
-end)
-win:CreateToggle(aimbotTab, "Rotate Rig", AimbotSettings.RotateRig, function(v)
-    AimbotSettings.RotateRig = v
-end)
+
+win:CreateSlider(aimbotTab, "FOV", 20, 800, AimbotSettings.FOV, function(v) AimbotSettings.FOV = v end)
+win:CreateSlider(aimbotTab, "Smoothing", 0.05, 1, AimbotSettings.Smoothing, function(v) AimbotSettings.Smoothing = v end)
+win:CreateSlider(aimbotTab, "Max Distance", 100, 2000, AimbotSettings.MaxDistance, function(v) AimbotSettings.MaxDistance = v end)
+win:CreateToggle(aimbotTab, "Wall Check", AimbotSettings.WallCheck, function(v) AimbotSettings.WallCheck = v end)
+win:CreateToggle(aimbotTab, "Team Check", AimbotSettings.TeamCheck, function(v) AimbotSettings.TeamCheck = v end)
+win:CreateToggle(aimbotTab, "Show FOV Circle", AimbotSettings.ShowFOV, function(v) AimbotSettings.ShowFOV = v end)
+win:CreateToggle(aimbotTab, "Rotate Rig", AimbotSettings.RotateRig, function(v) AimbotSettings.RotateRig = v end)
 win:CreateDropdown(aimbotTab, "Target", {"Head", "Torso", "Random"}, "Head", function(sel)
     AimbotSettings.Target = sel
     Notify("Target: " .. sel)
+end)
+
+win:CreateLabel(aimbotTab, "Trigger Bot")
+win:CreateToggle(aimbotTab, "Trigger Bot", AimbotSettings.TriggerBot, function(v)
+    AimbotSettings.TriggerBot = v
+    if v then
+        if triggerBotConn then triggerBotConn:Disconnect() end
+        triggerBotConn = RunService.RenderStepped:Connect(function()
+            if not AimbotSettings.TriggerBot then return end
+            local crosshair = getCrosshairPosition()
+            local target = getAimTarget(crosshair)
+            if not target then return end
+            local sp, on = Camera:WorldToViewportPoint(target.Position)
+            if not on then return end
+            local mouse = UserInputService:GetMouseLocation()
+            if (Vector2.new(sp.X, sp.Y) - mouse).Magnitude < 12 then
+                pcall(function()
+                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+                    task.wait(0.03)
+                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+                end)
+            end
+        end)
+    else
+        if triggerBotConn then triggerBotConn:Disconnect(); triggerBotConn = nil end
+    end
+end)
+win:CreateSlider(aimbotTab, "Trigger Range", 20, 400, AimbotSettings.TriggerRange, function(v) AimbotSettings.TriggerRange = v end)
+
+win:CreateToggle(aimbotTab, "Auto Fire", AimbotSettings.AutoFire, function(v)
+    AimbotSettings.AutoFire = v
+    if v then
+        if autoFireConn then autoFireConn:Disconnect() end
+        autoFireConn = RunService.RenderStepped:Connect(function()
+            if not AimbotSettings.AutoFire then return end
+            local crosshair = getCrosshairPosition()
+            local target = getAimTarget(crosshair)
+            if not target then return end
+            pcall(function()
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+                task.wait(0.05)
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+            end)
+        end)
+    else
+        if autoFireConn then autoFireConn:Disconnect(); autoFireConn = nil end
+    end
 end)
 
 win:CreateLabel(visualsTab, "Visual Settings")
@@ -1653,7 +1827,7 @@ espToggleRef = win:CreateToggle(visualsTab, "Rivals ESP (O)", VisualSettings.Riv
     Notify(v and "ESP enabled" or "ESP disabled")
 end)
 
-nametagToggleRef = win:CreateToggle(visualsTab, "Name Tags", VisualSettings.NameTags, function(v)
+win:CreateToggle(visualsTab, "Name Tags", VisualSettings.NameTags, function(v)
     VisualSettings.NameTags = v
     if v then
         startNameTagUpdater()
@@ -1665,12 +1839,10 @@ nametagToggleRef = win:CreateToggle(visualsTab, "Name Tags", VisualSettings.Name
 end)
 
 win:CreateLabel(miscTab, "Movement")
-
 win:CreateToggle(miscTab, "Infinite Jump", MiscSettings.InfJump, function(v)
     MiscSettings.InfJump = v
     Notify(v and "Infinite Jump enabled" or "Infinite Jump disabled")
 end)
-
 win:CreateToggle(miscTab, "Noclip", MovementSettings.Noclip, function(v)
     MovementSettings.Noclip = v
     if v then
@@ -1686,7 +1858,6 @@ win:CreateToggle(miscTab, "Noclip", MovementSettings.Noclip, function(v)
         if noclipConn then noclipConn:Disconnect(); noclipConn = nil end
     end
 end)
-
 win:CreateToggle(miscTab, "God Mode", MovementSettings.God, function(v)
     MovementSettings.God = v
     if v then
@@ -1698,7 +1869,6 @@ win:CreateToggle(miscTab, "God Mode", MovementSettings.God, function(v)
         if godConn then godConn:Disconnect(); godConn = nil end
     end
 end)
-
 win:CreateToggle(miscTab, "Anti-AFK", MiscSettings.AntiAFK, function(v)
     MiscSettings.AntiAFK = v
     if v then
@@ -1713,13 +1883,292 @@ win:CreateToggle(miscTab, "Anti-AFK", MiscSettings.AntiAFK, function(v)
     end
 end)
 
+win:CreateLabel(configsTab, "Config Slots")
+
+local function snapshotSettings()
+    return {
+        Aimbot = {
+            Enabled = AimbotSettings.Enabled,
+            SilentAim = AimbotSettings.SilentAim,
+            FOV = AimbotSettings.FOV,
+            Smoothing = AimbotSettings.Smoothing,
+            WallCheck = AimbotSettings.WallCheck,
+            MaxDistance = AimbotSettings.MaxDistance,
+            Target = AimbotSettings.Target,
+            ShowFOV = AimbotSettings.ShowFOV,
+            TeamCheck = AimbotSettings.TeamCheck,
+            RotateRig = AimbotSettings.RotateRig,
+            TriggerBot = AimbotSettings.TriggerBot,
+            TriggerRange = AimbotSettings.TriggerRange,
+            AutoFire = AimbotSettings.AutoFire,
+        },
+        Visual = {
+            RivalsESP = VisualSettings.RivalsESP,
+            NameTags = VisualSettings.NameTags,
+        },
+        Misc = {
+            InfJump = MiscSettings.InfJump,
+            AntiAFK = MiscSettings.AntiAFK,
+        },
+        Movement = {
+            Noclip = MovementSettings.Noclip,
+            God = MovementSettings.God,
+        },
+        Theme = currentThemeName,
+    }
+end
+
+local function applyConfig(data)
+    if not data then return end
+    if data.Aimbot then
+        for k, v in pairs(data.Aimbot) do AimbotSettings[k] = v end
+    end
+    if data.Visual then
+        for k, v in pairs(data.Visual) do VisualSettings[k] = v end
+    end
+    if data.Misc then
+        for k, v in pairs(data.Misc) do MiscSettings[k] = v end
+    end
+    if data.Movement then
+        for k, v in pairs(data.Movement) do MovementSettings[k] = v end
+    end
+    if data.Theme and THEMES[data.Theme] then
+        currentThemeName = data.Theme
+        for k, v in pairs(THEMES[data.Theme]) do Colors[k] = v end
+        applyTheme()
+    end
+end
+
+for i = 1, 3 do
+    local row = Instance.new("Frame")
+    row.LayoutOrder = i
+    row.Size = UDim2.new(1, -40, 0, 56)
+    row.BackgroundColor3 = Colors.Panel
+    row.BackgroundTransparency = 0.2
+    row.BorderSizePixel = 0
+    row.Parent = configsTab.Content
+    makeCorner(row, 10)
+    row.Position = UDim2.new(0, 20, 0, configsTab.YOffset + 10)
+    configsTab.YOffset += 66
+    register(reg.panels, row)
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -140, 1, 0)
+    title.Position = UDim2.new(0, 14, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = "Config Slot " .. i
+    title.TextColor3 = Colors.Text
+    title.Font = Enum.Font.GothamSemibold
+    title.TextSize = 14
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Parent = row
+    register(reg.texts, title)
+
+    local saveBtn = Instance.new("TextButton")
+    saveBtn.Size = UDim2.new(0, 55, 0, 32)
+    saveBtn.Position = UDim2.new(1, -120, 0.5, -16)
+    saveBtn.BackgroundColor3 = Colors.Panel
+    saveBtn.Text = "Save"
+    saveBtn.TextColor3 = Colors.Accent
+    saveBtn.Font = Enum.Font.GothamBold
+    saveBtn.TextSize = 12
+    saveBtn.BorderSizePixel = 0
+    saveBtn.Parent = row
+    makeCorner(saveBtn, 8)
+    register(reg.panels, saveBtn)
+    register(reg.accentTexts, saveBtn)
+
+    local loadBtn = Instance.new("TextButton")
+    loadBtn.Size = UDim2.new(0, 55, 0, 32)
+    loadBtn.Position = UDim2.new(1, -60, 0.5, -16)
+    loadBtn.BackgroundColor3 = Colors.Panel
+    loadBtn.Text = "Load"
+    loadBtn.TextColor3 = Colors.Text
+    loadBtn.Font = Enum.Font.GothamBold
+    loadBtn.TextSize = 12
+    loadBtn.BorderSizePixel = 0
+    loadBtn.Parent = row
+    makeCorner(loadBtn, 8)
+    register(reg.panels, loadBtn)
+    register(reg.texts, loadBtn)
+
+    saveBtn.MouseButton1Click:Connect(function()
+        Configs[i] = snapshotSettings()
+        if hasFileSystem then
+            pcall(function()
+                writefile("HappyHub/Configs/config" .. i .. ".json", HttpService:JSONEncode(Configs[i]))
+            end)
+        end
+        Notify("Config " .. i .. " saved!")
+    end)
+
+    loadBtn.MouseButton1Click:Connect(function()
+        if not Configs[i] and hasFileSystem and isfile("HappyHub/Configs/config" .. i .. ".json") then
+            pcall(function()
+                Configs[i] = HttpService:JSONDecode(readfile("HappyHub/Configs/config" .. i .. ".json"))
+            end)
+        end
+        if Configs[i] then
+            applyConfig(Configs[i])
+            Notify("Config " .. i .. " loaded!")
+        else
+            Notify("Config " .. i .. " is empty", 2)
+        end
+    end)
+end
+
+configsTab.YOffset += 10
+
+local themeTitle = Instance.new("TextLabel")
+themeTitle.Size = UDim2.new(1, -40, 0, 25)
+themeTitle.Position = UDim2.new(0, 20, 0, configsTab.YOffset)
+themeTitle.BackgroundTransparency = 1
+themeTitle.Font = Enum.Font.GothamBold
+themeTitle.TextSize = 16
+themeTitle.TextColor3 = Colors.Accent
+themeTitle.TextXAlignment = Enum.TextXAlignment.Left
+themeTitle.Text = "Themes"
+themeTitle.Parent = configsTab.Content
+register(reg.accentTexts, themeTitle)
+configsTab.YOffset += 35
+
+local themeRow = Instance.new("Frame")
+themeRow.Size = UDim2.new(1, -40, 0, 48)
+themeRow.BackgroundTransparency = 1
+themeRow.Position = UDim2.new(0, 20, 0, configsTab.YOffset)
+themeRow.Parent = configsTab.Content
+configsTab.YOffset += 58
+
+local themeLayout = Instance.new("UIListLayout")
+themeLayout.FillDirection = Enum.FillDirection.Horizontal
+themeLayout.Padding = UDim.new(0, 6)
+themeLayout.Parent = themeRow
+
+local themeNames = {"Green", "Purple", "Blue", "Red", "White"}
+for _, tName in ipairs(themeNames) do
+    local themeBtn = Instance.new("TextButton")
+    themeBtn.Size = UDim2.fromOffset(62, 46)
+    themeBtn.BackgroundColor3 = THEMES[tName].Accent
+    themeBtn.Text = ""
+    themeBtn.BorderSizePixel = 0
+    themeBtn.Parent = themeRow
+    makeCorner(themeBtn, 8)
+
+    local themeLbl = Instance.new("TextLabel")
+    themeLbl.Size = UDim2.new(1, 0, 0, 14)
+    themeLbl.Position = UDim2.new(0, 0, 1, 2)
+    themeLbl.BackgroundTransparency = 1
+    themeLbl.Text = tName
+    themeLbl.TextColor3 = Colors.TextSecondary
+    themeLbl.Font = Enum.Font.Gotham
+    themeLbl.TextSize = 9
+    themeLbl.Parent = themeBtn
+    register(reg.subtexts, themeLbl)
+
+    themeBtn.MouseButton1Click:Connect(function()
+        currentThemeName = tName
+        for k, v in pairs(THEMES[tName]) do Colors[k] = v end
+        applyTheme()
+        Notify("Theme: " .. tName)
+    end)
+end
+
+win:CreateLabel(playerListTab, "Players in Server")
+
+local playerInfoContainer = Instance.new("Frame")
+playerInfoContainer.Size = UDim2.new(1, -40, 0, 0)
+playerInfoContainer.AutomaticSize = Enum.AutomaticSize.Y
+playerInfoContainer.BackgroundTransparency = 1
+playerInfoContainer.Position = UDim2.new(0, 20, 0, playerListTab.YOffset)
+playerInfoContainer.Parent = playerListTab.Content
+playerListTab.YOffset += 10
+
+local infoLayout = Instance.new("UIListLayout")
+infoLayout.Padding = UDim.new(0, 6)
+infoLayout.SortOrder = Enum.SortOrder.LayoutOrder
+infoLayout.Parent = playerInfoContainer
+
+refreshPlayerList = function()
+    for _, ch in ipairs(playerInfoContainer:GetChildren()) do
+        if ch:IsA("Frame") then ch:Destroy() end
+    end
+
+    local myHRP = getHRP()
+    for idx, plr in ipairs(Players:GetPlayers()) do
+        local row = Instance.new("Frame")
+        row.LayoutOrder = idx
+        row.Size = UDim2.new(1, 0, 0, 62)
+        row.BackgroundColor3 = Colors.Panel
+        row.BackgroundTransparency = 0.2
+        row.BorderSizePixel = 0
+        row.Parent = playerInfoContainer
+        makeCorner(row, 10)
+        register(reg.panels, row)
+
+        local avatar = Instance.new("Frame")
+        avatar.Size = UDim2.fromOffset(38, 38)
+        avatar.Position = UDim2.new(0, 10, 0.5, -19)
+        avatar.BackgroundColor3 = Colors.Accent
+        avatar.BackgroundTransparency = 0.7
+        avatar.BorderSizePixel = 0
+        avatar.Parent = row
+        makeCorner(avatar, 19)
+
+        local img = Instance.new("ImageLabel")
+        img.Size = UDim2.new(1, -4, 1, -4)
+        img.Position = UDim2.new(0, 2, 0, 2)
+        img.BackgroundTransparency = 1
+        img.Image = "rbxthumb://type=AvatarHeadShot&id=" .. plr.UserId .. "&w=150&h=150"
+        img.ScaleType = Enum.ScaleType.Fit
+        img.Parent = avatar
+        makeCorner(img, 19)
+
+        local nameLbl = Instance.new("TextLabel")
+        nameLbl.Size = UDim2.new(1, -70, 0, 16)
+        nameLbl.Position = UDim2.new(0, 58, 0, 8)
+        nameLbl.BackgroundTransparency = 1
+        nameLbl.Text = plr.DisplayName .. " (@" .. plr.Name .. ")"
+        nameLbl.TextColor3 = Colors.Text
+        nameLbl.Font = Enum.Font.GothamSemibold
+        nameLbl.TextSize = 12
+        nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+        nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
+        nameLbl.Parent = row
+        register(reg.texts, nameLbl)
+
+        local infoLbl = Instance.new("TextLabel")
+        infoLbl.Size = UDim2.new(1, -70, 0, 14)
+        infoLbl.Position = UDim2.new(0, 58, 0, 26)
+        infoLbl.BackgroundTransparency = 1
+        local dist = 0
+        if myHRP and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            dist = (myHRP.Position - plr.Character.HumanoidRootPart.Position).Magnitude
+        end
+        local health = 0
+        local team = "No Team"
+        if plr.Character then
+            local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+            if hum then health = math.floor(hum.Health) end
+        end
+        if plr.Team then team = plr.Team.Name end
+        infoLbl.Text = string.format("%.0fm · %d HP · %s", dist, health, team)
+        infoLbl.TextColor3 = Colors.TextSecondary
+        infoLbl.Font = Enum.Font.Gotham
+        infoLbl.TextSize = 10
+        infoLbl.TextXAlignment = Enum.TextXAlignment.Left
+        infoLbl.Parent = row
+        register(reg.subtexts, infoLbl)
+    end
+end
+
+refreshPlayerList()
+
 UserInputService.InputBegan:Connect(function(input, gp)
     if gp then return end
+    if UserInputService:GetFocusedTextBox() then return end
     if input.KeyCode == Enum.KeyCode.T then
         local newState = not AimbotSettings.Enabled
-        if aimbotToggleRef then
-            aimbotToggleRef.SetState(newState, true)
-        end
+        if aimbotToggleRef then aimbotToggleRef.SetState(newState, true) end
         AimbotSettings.Enabled = newState
         local char = LocalPlayer.Character
         local hum = char and char:FindFirstChildOfClass("Humanoid")
@@ -1732,12 +2181,32 @@ UserInputService.InputBegan:Connect(function(input, gp)
         Notify(newState and "Aimbot enabled (T)" or "Aimbot disabled (T)")
     elseif input.KeyCode == Enum.KeyCode.O then
         local newState = not VisualSettings.RivalsESP
-        if espToggleRef then
-            espToggleRef.SetState(newState, true)
-        end
+        if espToggleRef then espToggleRef.SetState(newState, true) end
         VisualSettings.RivalsESP = newState
         if newState then startRivalsESP() else stopRivalsESP() end
         Notify(newState and "ESP enabled (O)" or "ESP disabled (O)")
+    end
+end)
+
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    if MovementSettings.Noclip and noclipConn then
+        noclipConn:Disconnect()
+        noclipConn = RunService.Stepped:Connect(function()
+            local c = LocalPlayer.Character
+            if c then
+                for _, p in ipairs(c:GetDescendants()) do
+                    if p:IsA("BasePart") then p.CanCollide = false end
+                end
+            end
+        end)
+    end
+    if MovementSettings.God and godConn then
+        godConn:Disconnect()
+        godConn = RunService.Heartbeat:Connect(function()
+            local hum = getHumanoid()
+            if hum then hum.Health = hum.MaxHealth end
+        end)
     end
 end)
 
@@ -1749,10 +2218,7 @@ local function onRenderStep()
     if not Camera then return end
 
     frameCounter = frameCounter + 1
-
-    if frameCounter % 5 == 0 then
-        rebuildRayFilter()
-    end
+    if frameCounter % 5 == 0 then rebuildRayFilter() end
 
     local crosshair = getCrosshairPosition()
 
@@ -1760,6 +2226,7 @@ local function onRenderStep()
         if AimbotSettings.Enabled and AimbotSettings.ShowFOV then
             fovCircle.Position = crosshair
             fovCircle.Radius = AimbotSettings.FOV
+            fovCircle.Color = Colors.Accent
             fovCircle.Visible = true
         else
             fovCircle.Visible = false
@@ -1782,16 +2249,9 @@ local function onRenderStep()
                     math.cos(targetYaw - currentYaw)
                 )
                 local newYaw = currentYaw + diff * 0.4
-
-                local look  = Vector3.new(-math.sin(newYaw), 0, -math.cos(newYaw))
+                local look = Vector3.new(-math.sin(newYaw), 0, -math.cos(newYaw))
                 local right = Vector3.new(math.cos(newYaw), 0, -math.sin(newYaw))
-
-                hrp.CFrame = CFrame.fromMatrix(
-                    hrp.CFrame.Position,
-                    right,
-                    Vector3.new(0, 1, 0),
-                    -look
-                )
+                hrp.CFrame = CFrame.fromMatrix(hrp.CFrame.Position, right, Vector3.new(0, 1, 0), -look)
             end
         end
     else
